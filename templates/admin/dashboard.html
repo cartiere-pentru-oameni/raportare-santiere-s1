@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Raportare Șantiere{% endblock %}
+
+{% block content %}
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Admin Dashboard</h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="info-box">
+                            <span class="info-box-icon bg-info"><i class="fas fa-users"></i></span>
+                            <div class="info-box-content">
+                                <span class="info-box-text">User Management</span>
+                                <span class="info-box-number"><a href="/admin/users">Manage Users</a></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="info-box">
+                            <span class="info-box-icon bg-danger"><i class="fas fa-file-alt"></i></span>
+                            <div class="info-box-content">
+                                <span class="info-box-text">Reports Management</span>
+                                <span class="info-box-number"><a href="/admin/reports">Manage Reports</a></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="info-box">
+                            <span class="info-box-icon bg-warning"><i class="fas fa-envelope"></i></span>
+                            <div class="info-box-content">
+                                <span class="info-box-text">Contact Messages</span>
+                                <span class="info-box-number"><a href="/admin/contact">View Messages</a></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

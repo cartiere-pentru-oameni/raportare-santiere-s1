@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}Validator Dashboard - Raportare Șantiere{% endblock %}
+
+{% block content %}
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Rapoarte Pending</h3>
+            </div>
+            <div class="card-body">
+                <table class="table table-bordered table-hover" id="reports-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Tip</th>
+                            <th>Locație</th>
+                            <th>Status</th>
+                            <th>Raportat de</th>
+                            <th>Data</th>
+                            <th>Acțiuni</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for report in reports %}
+                        <tr>
+                            <td>{{ report.id }}</td>
+                            <td>
+                                {% if report.type == 'illegal' %}
+                                <span class="badge badge-danger">Ilegal</span>
+                                {% elif report.type == 'no-permit' %}
+                                <span class="badge badge-warning">Fără Autorizație</span>
+                                {% elif report.type == 'safety' %}
+                                <span class="badge badge-info">Securitate</span>
+                                {% elif report.type == 'noise' %}
+                                <span class="badge badge-secondary">Zgomot</span>
+                                {% else %}
+                                <span class="badge badge-secondary">{{ report.type }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ report.address or 'Lat: %.4f, Lng: %.4f'|format(report.location_lat, report.location_lng) }}</td>
+                            <td>
+                                {% if report.status == 'pending' %}
+                                <span class="badge badge-warning">Pending</span>
+                                {% elif report.status == 'in-review' %}
+                                <span class="badge badge-info">In Review</span>
+                                {% elif report.status == 'validated' %}
+                                <span class="badge badge-success">Validated</span>
+                                {% elif report.status == 'resolved' %}
+                                <span class="badge badge-primary">Resolved</span>
+                                {% elif report.status == 'rejected' %}
+                                <span class="badge badge-danger">Rejected</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if report.submitted_by_username %}
+                                <span class="badge badge-info">
+                                    <i class="fas fa-user-shield"></i> {{ report.submitted_by_username }}
+                                </span>
+                                {% else %}
+                                <span class="text-muted">Cetățean</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ report.created_at[:10] }}</td>
+                            <td>
+                                <a href="/validator/report/{{ report.id }}" class="btn btn-sm btn-primary">Verifică</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="info-box">
+            <span class="info-box-icon bg-warning"><i class="fas fa-clock"></i></span>
+            <div class="info-box-content">
+                <span class="info-box-text">Pending</span>
+                <span class="info-box-number">{{ stats.pending }}</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="info-box">
+            <span class="info-box-icon bg-info"><i class="fas fa-eye"></i></span>
+            <div class="info-box-content">
+                <span class="info-box-text">In Review</span>
+                <span class="info-box-number">{{ stats.in_review }}</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="info-box">
+            <span class="info-box-icon bg-success"><i class="fas fa-check"></i></span>
+            <div class="info-box-content">
+                <span class="info-box-text">Validated</span>
+                <span class="info-box-number">{{ stats.validated }}</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="info-box">
+            <span class="info-box-icon bg-danger"><i class="fas fa-times"></i></span>
+            <div class="info-box-content">
+                <span class="info-box-text">Rejected</span>
+                <span class="info-box-number">{{ stats.rejected }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    $('#reports-table').DataTable({
+        "order": [[4, "desc"]],
+        "pageLength": 25,
+        "language": {
+            "url": "//cdn.datatables.net/plug-ins/1.13.7/i18n/ro.json"
+        }
+    });
+});
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap4.min.css">
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap4.min.js"></script>
+{% endblock %}

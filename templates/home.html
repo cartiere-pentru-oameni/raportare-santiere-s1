@@ -1,0 +1,416 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --cpo-green: #1E773B;
+        --cpo-navy: #171E42;
+        --cpo-light: #F6F6F9;
+        --cpo-white: #ffffff;
+    }
+    .hero-section {
+        background: var(--cpo-light);
+        color: var(--cpo-navy);
+        padding: 60px 0;
+        margin: -15px -15px 30px -15px;
+        border-bottom: 4px solid var(--cpo-green);
+    }
+    .hero-content {
+        max-width: 800px;
+    }
+    .hero-image {
+        position: relative;
+        overflow: hidden;
+        border-radius: 15px;
+        box-shadow: 0 20px 60px rgba(23,30,66,0.2);
+        border: 3px solid var(--cpo-green);
+    }
+    .feature-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        height: 100%;
+        background: white;
+    }
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(30,119,59,0.2);
+        border: 2px solid var(--cpo-green);
+    }
+    .feature-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        margin-bottom: 15px;
+    }
+    .bg-cpo-green {
+        background: var(--cpo-green);
+    }
+    .bg-cpo-navy {
+        background: var(--cpo-navy);
+    }
+    .bg-cpo-light {
+        background: var(--cpo-light);
+        color: var(--cpo-navy);
+    }
+    .stat-card {
+        border-radius: 15px;
+        border: none;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+    }
+    .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(30,119,59,0.3);
+    }
+    .section-title {
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 30px;
+        color: var(--cpo-navy);
+    }
+    .btn-cpo-green {
+        background: var(--cpo-green);
+        color: white;
+        border: none;
+    }
+    .btn-cpo-green:hover {
+        background: var(--cpo-navy);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(23,30,66,0.3);
+    }
+    .btn-cpo-navy {
+        background: var(--cpo-navy);
+        color: white;
+        border: none;
+    }
+    .btn-cpo-navy:hover {
+        background: var(--cpo-green);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(30,119,59,0.3);
+    }
+    .action-btn {
+        padding: 12px 30px;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-7 hero-content">
+                <h1 class="display-4 mb-3 font-weight-bold">Raportare Santiere Sector 1</h1>
+                <h4 class="mb-4">Un Sector 1 pentru toți, nu pentru profituri ilegale</h4>
+
+                <p class="lead mb-4">
+                    Nu suntem împotriva dezvoltării Sectorului 1. Ne dorim un Sector 1, București pentru toți cetățenii săi.
+                    Nu acceptăm un sector dezvoltat ilegal, în bătaie de joc față de comunitate, urmărind doar interesele șmecherilor imobiliari.
+                </p>
+
+                <div class="mb-4">
+                    <a href="/permits" class="btn btn-cpo-navy btn-lg action-btn mr-3">
+                        <i class="fas fa-search"></i> Caută Autorizația
+                    </a>
+                    <a href="/report/new" class="btn btn-cpo-green btn-lg action-btn">
+                        <i class="fas fa-plus"></i> Raportează Acum
+                    </a>
+                </div>
+
+                <div class="alert" style="background: white; border: 2px solid var(--cpo-green); color: var(--cpo-navy);">
+                    <i class="fas fa-shield-alt" style="color: var(--cpo-green);"></i> <strong>Anonimitate 100% garantată.</strong>
+                    Nu colectăm date personale sau IP-uri.
+                </div>
+            </div>
+
+            <div class="col-md-5">
+                <div class="hero-image">
+                    <img src="/static/images/urban_nightmare.webp" alt="Dezvoltare urbană haotică"
+                         class="img-fluid" style="width: 100%; border-radius: 15px;">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search Authorization Info -->
+<div class="container mb-5">
+    <div class="card" style="background: var(--cpo-green); color: white; border-radius: 15px; box-shadow: 0 5px 20px rgba(30,119,59,0.3);">
+        <div class="card-body p-5">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h3 class="font-weight-bold mb-3">
+                        <i class="fas fa-database"></i> Motor de Căutare Autorizații
+                    </h3>
+                    <p class="mb-3" style="font-size: 1.1rem;">
+                        <strong>Înainte de a raporta</strong>, caută autorizația de construire în baza noastră de date!
+                    </p>
+                    <p class="mb-0">
+                        Avem autorizații de la <strong>Primăria Sectorului 1</strong> și <strong>Primăria Municipiului București</strong>.
+                        Dacă găsești autorizația, nu e nevoie să raportezi.
+                    </p>
+                </div>
+                <div class="col-md-4 text-center">
+                    <a href="/permits" class="btn btn-lg" style="background: white; color: var(--cpo-green); font-weight: 700; padding: 15px 40px; border-radius: 10px; box-shadow: 0 3px 10px rgba(0,0,0,0.2);">
+                        <i class="fas fa-search"></i> Caută Autorizația
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- How It Works -->
+<div class="container mt-5 mb-5">
+    <h2 class="section-title text-center mb-5">
+        <i class="fas fa-star" style="color: var(--cpo-green);"></i> Cum Funcționează
+    </h2>
+    <div class="row">
+        <div class="col-md-3 mb-4">
+            <div class="text-center">
+                <div class="feature-icon bg-cpo-navy text-white mx-auto">
+                    <i class="fas fa-database"></i>
+                </div>
+                <h5 class="font-weight-bold" style="color: var(--cpo-navy);">1. Caută Autorizația</h5>
+                <p class="text-muted">Verifică în baza noastră de date dacă există autorizație</p>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="text-center">
+                <div class="feature-icon bg-cpo-green text-white mx-auto">
+                    <i class="fas fa-search"></i>
+                </div>
+                <h5 class="font-weight-bold" style="color: var(--cpo-navy);">2. Verificare Manuală</h5>
+                <p class="text-muted">Consultă tutorialul pentru verificare în detaliu</p>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="text-center">
+                <div class="feature-icon bg-cpo-navy text-white mx-auto">
+                    <i class="fas fa-edit"></i>
+                </div>
+                <h5 class="font-weight-bold" style="color: var(--cpo-navy);">3. Raportează</h5>
+                <p class="text-muted">Completează formularul cu locația și fotografii</p>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="text-center">
+                <div class="feature-icon bg-cpo-green text-white mx-auto">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h5 class="font-weight-bold" style="color: var(--cpo-navy);">4. Monitorizează</h5>
+                <p class="text-muted">Urmărește statusul raportului pe hartă</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features Grid -->
+<div class="container mb-5">
+    <h2 class="section-title text-center mb-5">Funcționalități Platformă</h2>
+    <div class="row">
+        <div class="col-md-3 col-sm-6 mb-4">
+            <div class="card feature-card">
+                <div class="card-body text-center">
+                    <div class="feature-icon bg-cpo-green text-white mx-auto">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h5 class="font-weight-bold" style="color: var(--cpo-navy);">Protecție Maximă</h5>
+                    <ul class="text-left small text-muted">
+                        <li>Anonimitate 100%</li>
+                        <li>Fără EXIF</li>
+                        <li>GDPR compliant</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-4">
+            <div class="card feature-card">
+                <div class="card-body text-center">
+                    <div class="feature-icon bg-cpo-navy text-white mx-auto">
+                        <i class="fas fa-map-marked-alt"></i>
+                    </div>
+                    <h5 class="font-weight-bold" style="color: var(--cpo-navy);">Ușor de Folosit</h5>
+                    <ul class="text-left small text-muted">
+                        <li>Hartă interactivă</li>
+                        <li>Max 10 imagini</li>
+                        <li>Link permanent</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-4">
+            <div class="card feature-card">
+                <div class="card-body text-center">
+                    <div class="feature-icon bg-cpo-green text-white mx-auto">
+                        <i class="fas fa-eye"></i>
+                    </div>
+                    <h5 class="font-weight-bold" style="color: var(--cpo-navy);">Transparență</h5>
+                    <ul class="text-left small text-muted">
+                        <li>Rapoarte publice</li>
+                        <li>Statusuri clare</li>
+                        <li>Statistici live</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-4">
+            <div class="card feature-card">
+                <div class="card-body text-center">
+                    <div class="feature-icon bg-cpo-navy text-white mx-auto">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <h5 class="font-weight-bold" style="color: var(--cpo-navy);">Educație</h5>
+                    <ul class="text-left small text-muted">
+                        <li>Tutorial complet</li>
+                        <li>Legislație & PUZ</li>
+                        <li>Resurse civice</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics -->
+<div class="container mb-5">
+    <h2 class="section-title text-center mb-5">Statistici în Timp Real</h2>
+    <div class="row">
+        <div class="col-lg-3 col-6 mb-4">
+            <div class="card stat-card bg-cpo-navy text-white">
+                <div class="card-body text-center">
+                    <h3 id="total-reports" class="display-4">-</h3>
+                    <p class="mb-0">Total Rapoarte</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-6 mb-4">
+            <div class="card stat-card bg-cpo-green text-white">
+                <div class="card-body text-center">
+                    <h3 id="pending-reports" class="display-4">-</h3>
+                    <p class="mb-0">În Așteptare</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-6 mb-4">
+            <div class="card stat-card bg-cpo-navy text-white">
+                <div class="card-body text-center">
+                    <h3 id="validated-reports" class="display-4">-</h3>
+                    <p class="mb-0">Validate</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-6 mb-4">
+            <div class="card stat-card bg-cpo-green text-white">
+                <div class="card-body text-center">
+                    <h3 id="resolved-reports" class="display-4">-</h3>
+                    <p class="mb-0">Rezolvate</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="container mb-5">
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card feature-card">
+                <div class="card-body text-center p-4">
+                    <i class="fas fa-map fa-3x mb-3" style="color: var(--cpo-green);"></i>
+                    <h5 class="font-weight-bold" style="color: var(--cpo-navy);">Harta Rapoartelor</h5>
+                    <p class="text-muted mb-3">Vezi toate șantierele raportate pe hartă</p>
+                    <a href="/reports" class="btn btn-cpo-green btn-block action-btn">
+                        Deschide Harta
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card feature-card">
+                <div class="card-body text-center p-4">
+                    <i class="fas fa-chart-bar fa-3x mb-3" style="color: var(--cpo-navy);"></i>
+                    <h5 class="font-weight-bold" style="color: var(--cpo-navy);">Statistici Detaliate</h5>
+                    <p class="text-muted mb-3">Progresul și eficiența rapoartelor</p>
+                    <a href="/statistics" class="btn btn-cpo-navy btn-block action-btn">
+                        Vezi Statistici
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card feature-card">
+                <div class="card-body text-center p-4">
+                    <i class="fas fa-info-circle fa-3x mb-3" style="color: var(--cpo-green);"></i>
+                    <h5 class="font-weight-bold" style="color: var(--cpo-navy);">Informații</h5>
+                    <p class="text-muted mb-3">Drepturile tale și contact</p>
+                    <a href="/info" class="btn btn-cpo-green btn-block action-btn">
+                        Citește Mai Mult
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- About CPO -->
+<div class="container mb-2">
+    <div class="card feature-card" style="background: var(--cpo-navy); color: white;">
+        <div class="card-body p-5">
+            <h2 class="text-center mb-3" style="color: white; font-weight: 700; font-size: 28px;">
+                <i class="fas fa-users" style="color: var(--cpo-green);"></i> Despre Cartiere pentru Oameni
+            </h2>
+            <p class="text-center lead mb-5" style="color: rgba(255,255,255,0.9);">
+                Asociație civică dedicată îmbunătățirii calității vieții în cartierele bucureștene.
+                Lucrăm fără interese politice sau financiare pentru un oraș mai frumos și funcțional.
+            </p>
+            <div class="row">
+                <div class="col-md-4 text-center mb-4">
+                    <i class="fas fa-seedling fa-4x mb-3" style="color: var(--cpo-green);"></i>
+                    <h5 class="font-weight-bold" style="color: white;">Regenerare Urbană</h5>
+                    <p style="color: rgba(255,255,255,0.8);">Transformăm spațiile abandonate în oaze de viață</p>
+                </div>
+                <div class="col-md-4 text-center mb-4">
+                    <i class="fas fa-balance-scale fa-4x mb-3" style="color: var(--cpo-green);"></i>
+                    <h5 class="font-weight-bold" style="color: white;">Dezvoltare Responsabilă</h5>
+                    <p style="color: rgba(255,255,255,0.8);">Monitorizăm construcțiile și combatem haosul urban</p>
+                </div>
+                <div class="col-md-4 text-center mb-4">
+                    <i class="fas fa-bicycle fa-4x mb-3" style="color: var(--cpo-green);"></i>
+                    <h5 class="font-weight-bold" style="color: white;">Mobilitate Durabilă</h5>
+                    <p style="color: rgba(255,255,255,0.8);">Promovăm transportul public și pietonalizarea</p>
+                </div>
+            </div>
+            <div class="text-center mt-4">
+                <a href="https://cartierepentruoameni.ro" target="_blank" class="btn btn-cpo-green btn-lg action-btn">
+                    <i class="fas fa-external-link-alt"></i> Află Mai Multe
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    $.getJSON('/api/statistics', function(data) {
+        $('#total-reports').text(data.total);
+        $('#pending-reports').text(data.by_status['pending'] || 0);
+        $('#validated-reports').text(data.by_status['validated'] || 0);
+        $('#resolved-reports').text(data.by_status['resolved'] || 0);
+    });
+});
+</script>
+{% endblock %}

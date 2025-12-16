@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block title %}Contact Anonim - Raportare Șantiere{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --cpo-green: #1E773B;
+        --cpo-navy: #171E42;
+        --cpo-light: #F6F6F9;
+    }
+    .contact-header {
+        background: var(--cpo-light);
+        padding: 40px 0;
+        margin: -15px -15px 30px -15px;
+        border-bottom: 3px solid var(--cpo-green);
+    }
+    .contact-card {
+        border-radius: 15px;
+        border: none;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        margin-bottom: 30px;
+    }
+    .btn-submit {
+        background: var(--cpo-green);
+        color: white;
+        border: none;
+        padding: 12px 40px;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+    .btn-submit:hover {
+        background: var(--cpo-navy);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(23,30,66,0.3);
+    }
+    .form-control:focus {
+        border-color: var(--cpo-green);
+        box-shadow: 0 0 0 0.2rem rgba(30,119,59,0.25);
+    }
+    .alert-cpo {
+        border-radius: 10px;
+        border: none;
+        padding: 20px;
+        margin: 20px 0;
+    }
+    .alert-info-cpo {
+        background: #d1ecf1;
+        border-left: 4px solid #17a2b8;
+    }
+    .alert-warning-cpo {
+        background: #fff3cd;
+        border-left: 4px solid #ffc107;
+    }
+    .alert-navy-cpo {
+        background: var(--cpo-navy);
+        color: white;
+        border-left: 4px solid var(--cpo-green);
+    }
+    .use-case-item {
+        padding: 10px 0;
+        font-size: 16px;
+        line-height: 1.8;
+    }
+    .use-case-item i {
+        color: var(--cpo-green);
+        margin-right: 10px;
+        font-size: 18px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="contact-header">
+    <div class="container">
+        <h1 class="display-4 font-weight-bold" style="color: var(--cpo-navy);">
+            <i class="fas fa-envelope"></i> Contact Anonim
+        </h1>
+        <p class="lead" style="color: var(--cpo-navy);">
+            Scrie-ne în siguranță. Confidențialitatea ta este garantată 100%.
+        </p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <!-- Privacy Notice -->
+            <div class="alert-cpo alert-navy-cpo">
+                <div class="text-center">
+                    <i class="fas fa-shield-alt fa-2x mb-3" style="color: var(--cpo-green);"></i>
+                    <h5 class="font-weight-bold">Confidențialitate Garantată</h5>
+                    <p class="mb-0">
+                        Acest formular este complet anonim. Nu colectăm nicio informație care te-ar putea identifica (IP, cookies, etc.).
+                    </p>
+                </div>
+            </div>
+
+            <!-- Use Cases Card -->
+            <div class="contact-card">
+                <div class="card-body p-4">
+                    <h5 style="color: var(--cpo-navy); font-weight: 700; margin-bottom: 20px;">
+                        <i class="fas fa-list-ul" style="color: var(--cpo-green);"></i>
+                        Folosește acest formular pentru a:
+                    </h5>
+                    <div class="use-case-item">
+                        <i class="fas fa-user-shield"></i>
+                        Raporta date personale prezente într-o raportare
+                    </div>
+                    <div class="use-case-item">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Semnala probleme tehnice cu platforma
+                    </div>
+                    <div class="use-case-item">
+                        <i class="fas fa-question-circle"></i>
+                        Pune întrebări despre sistemul de raportare
+                    </div>
+                    <div class="use-case-item">
+                        <i class="fas fa-lightbulb"></i>
+                        Oferi feedback sau sugestii
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Form Card -->
+            <div class="contact-card">
+                <div class="card-body p-4">
+                    <h5 style="color: var(--cpo-navy); font-weight: 700; margin-bottom: 20px;">
+                        <i class="fas fa-edit" style="color: var(--cpo-green);"></i>
+                        Formular Contact
+                    </h5>
+
+                    <form id="contact-form">
+                        <div class="form-group">
+                            <label for="email" style="font-weight: 600; color: var(--cpo-navy);">
+                                Adresă de email (opțional)
+                            </label>
+                            <input type="email" class="form-control" id="email" name="email" placeholder="ex: exemplu@email.com">
+                            <small class="form-text text-muted">
+                                <i class="fas fa-info-circle"></i> <strong>Lasă acest câmp gol dacă vrei să rămâi complet anonim.</strong><br>
+                                Completează-l doar dacă dorești un răspuns din partea noastră.<br>
+                                <strong>Recomandare:</strong> Pentru a-ți păstra anonimitatea, creează o adresă de email nouă folosită exclusiv pentru această platformă.
+                            </small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="message" style="font-weight: 600; color: var(--cpo-navy);">
+                                Mesaj *
+                            </label>
+                            <textarea class="form-control" id="message" name="message" rows="8" required placeholder="Scrie mesajul tău aici..."></textarea>
+                            <small class="form-text text-muted">
+                                <i class="fas fa-exclamation-triangle"></i> <strong>Atenție:</strong> Nu include date personale în mesaj (nume, adresă, telefon) dacă vrei să rămâi anonim.
+                            </small>
+                        </div>
+
+                        <div class="alert-cpo alert-warning-cpo">
+                            <i class="fas fa-heart" style="color: #ffc107;"></i>
+                            <strong>Despre noi</strong><br>
+                            Suntem o asociație non-profit cu membri care lucrează pro-bono pentru această platformă.
+                            Dacă ai furnizat o adresă de email, vom încerca să răspundem cât mai curând posibil, dar nu putem garanta un timp specific de răspuns.
+                        </div>
+
+                        <button type="submit" class="btn btn-submit">
+                            <i class="fas fa-paper-plane"></i> Trimite mesajul
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    $('#contact-form').on('submit', function(e) {
+        e.preventDefault();
+
+        var formData = {
+            email: $('#email').val().trim() || null,
+            message: $('#message').val().trim()
+        };
+
+        // Validate message
+        if (!formData.message) {
+            showWarning('Te rugăm să introduci un mesaj.');
+            return;
+        }
+
+        // Disable submit button
+        var $submitBtn = $(this).find('button[type="submit"]');
+        $submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Se trimite...');
+
+        $.ajax({
+            url: '/api/contact',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(formData),
+            success: function(response) {
+                showSuccess('Mesaj trimis cu succes! Mulțumim pentru feedback.', function() {
+                    window.location.href = '/';
+                });
+            },
+            error: function(xhr) {
+                var errorMsg = xhr.responseJSON?.error || 'A apărut o eroare.';
+                showError(errorMsg);
+                $submitBtn.prop('disabled', false).html('<i class="fas fa-paper-plane"></i> Trimite mesajul');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

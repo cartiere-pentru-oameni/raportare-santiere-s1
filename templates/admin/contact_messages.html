@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+
+{% block title %}Contact Messages - Admin{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap4.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Mesaje de Contact Anonime</h3>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> Aceste mesaje au fost trimise prin formularul anonim de contact.
+                    Respectă confidențialitatea utilizatorilor și răspunde doar dacă au furnizat o adresă de email.
+                </div>
+
+                <table class="table table-bordered table-hover" id="messages-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Email</th>
+                            <th>Mesaj</th>
+                            <th>Data</th>
+                            <th>Citit</th>
+                            <th>Acțiuni</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for msg in messages %}
+                        <tr id="message-{{ msg.id }}" class="{% if not msg.read %}font-weight-bold{% endif %}">
+                            <td>{{ msg.id[:8] }}</td>
+                            <td>
+                                {% if msg.email %}
+                                <a href="mailto:{{ msg.email }}">{{ msg.email }}</a>
+                                {% else %}
+                                <span class="text-muted">Anonim</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div style="max-width: 400px;">
+                                    {{ msg.message[:255] }}{% if msg.message|length > 255 %}...{% endif %}
+                                </div>
+                            </td>
+                            <td>{{ msg.created_at[:19] }}</td>
+                            <td>
+                                {% if msg.read %}
+                                <span class="badge badge-success">Citit</span>
+                                {% else %}
+                                <span class="badge badge-warning">Necitit</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if not msg.read %}
+                                <button class="btn btn-sm btn-primary" onclick="markAsRead('{{ msg.id }}')">
+                                    <i class="fas fa-check"></i> Marchează citit
+                                </button>
+                                {% endif %}
+                                <button class="btn btn-sm btn-info view-message-btn"
+                                    data-id="{{ msg.id }}"
+                                    data-email="{{ msg.email or '' }}"
+                                    data-message="{{ msg.message }}"
+                                    data-date="{{ msg.created_at }}"
+                                    data-notes="{{ msg.admin_notes or '' }}">
+                                    <i class="fas fa-eye"></i> Vezi
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteMessage('{{ msg.id }}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Message Detail Modal -->
+<div class="modal fade" id="messageModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detalii Mesaj</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <dl class="row">
+                    <dt class="col-sm-3">Email:</dt>
+                    <dd class="col-sm-9" id="modal-email"></dd>
+
+                    <dt class="col-sm-3">Data:</dt>
+                    <dd class="col-sm-9" id="modal-date"></dd>
+
+                    <dt class="col-sm-3">Mesaj:</dt>
+                    <dd class="col-sm-9"><pre id="modal-message" style="white-space: pre-wrap;"></pre></dd>
+
+                    <dt class="col-sm-3">Notițe admin:</dt>
+                    <dd class="col-sm-9">
+                        <textarea class="form-control" id="modal-notes" rows="3"></textarea>
+                        <button class="btn btn-sm btn-success mt-2" onclick="saveNotes()">
+                            <i class="fas fa-save"></i> Salvează notițe
+                        </button>
+                    </dd>
+                </dl>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Închide</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap4.min.js"></script>
+<script>
+let currentMessageId = null;
+
+$(document).ready(function() {
+    $('#messages-table').DataTable({
+        order: [[3, 'desc']], // Sort by date descending
+        pageLength: 25
+    });
+
+    // View message button click handler
+    $(document).on('click', '.view-message-btn', function() {
+        const id = $(this).data('id');
+        const email = $(this).data('email');
+        const message = $(this).data('message');
+        const date = $(this).data('date');
+        const notes = $(this).data('notes');
+        viewMessage(id, email, message, date, notes);
+    });
+});
+
+function markAsRead(messageId) {
+    showConfirm(
+        'Marchează mesajul ca citit?',
+        function() {
+            $.ajax({
+                url: `/admin/contact/${messageId}/read`,
+                type: 'POST',
+                success: function() {
+                    location.reload();
+                },
+                error: function(xhr) {
+                    showError(xhr.responseJSON?.error || 'Eroare necunoscută');
+                }
+            });
+        }
+    );
+}
+
+function viewMessage(id, email, message, date, notes) {
+    currentMessageId = id;
+    $('#modal-email').html(email ? `<a href="mailto:${email}">${email}</a>` : '<span class="text-muted">Anonim</span>');
+    $('#modal-date').text(date);
+    $('#modal-message').text(message);
+    $('#modal-notes').val(notes || '');
+    $('#messageModal').modal('show');
+}
+
+function saveNotes() {
+    const notes = $('#modal-notes').val();
+
+    $.ajax({
+        url: `/admin/contact/${currentMessageId}/notes`,
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ notes: notes }),
+        success: function() {
+            showSuccess('Notițe salvate cu succes!', function() {
+                $('#messageModal').modal('hide');
+                location.reload();
+            });
+        },
+        error: function(xhr) {
+            showError(xhr.responseJSON?.error || 'Eroare necunoscută');
+        }
+    });
+}
+
+function deleteMessage(messageId) {
+    showConfirm(
+        'Șterge definitiv mesajul? Această acțiune nu poate fi anulată.',
+        function() {
+            $.ajax({
+                url: `/admin/contact/${messageId}/delete`,
+                type: 'POST',
+                success: function() {
+                    showSuccess('Mesaj șters!');
+                    $(`#message-${messageId}`).fadeOut(300, function() {
+                        $(this).remove();
+                    });
+                },
+                error: function(xhr) {
+                    showError(xhr.responseJSON?.error || 'Eroare necunoscută');
+                }
+            });
+        }
+    );
+}
+</script>
+{% endblock %}

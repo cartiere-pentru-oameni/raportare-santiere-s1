@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block title %}Admin - Permits Management{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <div class="container-fluid">
+        <h1><i class="fas fa-database"></i> Permits Data Management</h1>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- PS1 Card -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-success">
+                    <h3 class="card-title"><i class="fas fa-building"></i> Primaria Sector 1 (PS1)</h3>
+                </div>
+                <div class="card-body">
+                    {% set ps1_meta = metadata|selectattr('issuer', 'equalto', 'ps1')|list|first %}
+                    {% if ps1_meta %}
+                    <table class="table table-sm">
+                        <tr>
+                            <th>Total Permits:</th>
+                            <td><strong>{{ ps1_meta.total_count }}</strong></td>
+                        </tr>
+                        <tr>
+                            <th>Last Scraped:</th>
+                            <td>
+                                {% if ps1_meta.last_scraped_at %}
+                                    {{ ps1_meta.last_scraped_at }}
+                                    <br><small class="text-muted">by {{ ps1_meta.scraped_by_username or 'System' }}</small>
+                                {% else %}
+                                    <span class="text-muted">Never</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Status:</th>
+                            <td>
+                                {% if ps1_meta.status == 'running' %}
+                                    <span class="badge badge-warning">Running</span>
+                                {% elif ps1_meta.status == 'error' %}
+                                    <span class="badge badge-danger">Error</span>
+                                {% else %}
+                                    <span class="badge badge-success">Idle</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% if ps1_meta.error_message %}
+                        <tr>
+                            <th>Error:</th>
+                            <td class="text-danger small">{{ ps1_meta.error_message }}</td>
+                        </tr>
+                        {% endif %}
+                    </table>
+
+                    <button class="btn btn-success btn-block"
+                            onclick="refreshPermits('ps1')"
+                            id="refresh-ps1"
+                            {% if ps1_meta.status == 'running' %}disabled{% endif %}>
+                        <i class="fas fa-sync"></i> Refresh PS1 Data
+                    </button>
+
+                    <div class="alert alert-info mt-3 mb-0">
+                        <small>
+                            <i class="fas fa-info-circle"></i>
+                            Downloads XLS files from primariasector1.ro and updates the database.
+                        </small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- PMB Card -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary">
+                    <h3 class="card-title"><i class="fas fa-city"></i> Primaria Municipiului (PMB)</h3>
+                </div>
+                <div class="card-body">
+                    {% set pmb_meta = metadata|selectattr('issuer', 'equalto', 'pmb')|list|first %}
+                    {% if pmb_meta %}
+                    <table class="table table-sm">
+                        <tr>
+                            <th>Total Permits:</th>
+                            <td><strong>{{ pmb_meta.total_count }}</strong></td>
+                        </tr>
+                        <tr>
+                            <th>Last Scraped:</th>
+                            <td>
+                                {% if pmb_meta.last_scraped_at %}
+                                    {{ pmb_meta.last_scraped_at }}
+                                    <br><small class="text-muted">by {{ pmb_meta.scraped_by_username or 'System' }}</small>
+                                {% else %}
+                                    <span class="text-muted">Never</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Status:</th>
+                            <td>
+                                {% if pmb_meta.status == 'running' %}
+                                    <span class="badge badge-warning">Running</span>
+                                {% elif pmb_meta.status == 'error' %}
+                                    <span class="badge badge-danger">Error</span>
+                                {% else %}
+                                    <span class="badge badge-success">Idle</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% if pmb_meta.error_message %}
+                        <tr>
+                            <th>Error:</th>
+                            <td class="text-danger small">{{ pmb_meta.error_message }}</td>
+                        </tr>
+                        {% endif %}
+                    </table>
+
+                    <button class="btn btn-primary btn-block"
+                            onclick="refreshPermits('pmb')"
+                            id="refresh-pmb"
+                            {% if pmb_meta.status == 'running' %}disabled{% endif %}>
+                        <i class="fas fa-sync"></i> Refresh PMB Data
+                    </button>
+
+                    <div class="alert alert-info mt-3 mb-0">
+                        <small>
+                            <i class="fas fa-info-circle"></i>
+                            Fetches live data from urbanism.pmb.ro and updates the database.
+                        </small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="alert alert-warning">
+                <h5><i class="fas fa-exclamation-triangle"></i> Important Notes</h5>
+                <ul class="mb-0">
+                    <li><strong>PS1 Scraper</strong>: Downloads XLS files from primariasector1.ro and parses them. Requires internet connection.</li>
+                    <li><strong>PMB Scraper</strong>: Fetches live data from urbanism.pmb.ro API. Requires internet connection.</li>
+                    <li><strong>Timeout</strong>: Each scraper has a 5-minute timeout.</li>
+                    <li><strong>Data Replacement</strong>: Old data is deleted before inserting new data for each issuer.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function refreshPermits(issuer) {
+    const btn = $(`#refresh-${issuer}`);
+    const originalHtml = btn.html();
+
+    showConfirm(
+        `Sigur vrei să reîmprospătezi datele pentru ${issuer.toUpperCase()}? Scraper-ul va rula și va înlocui datele existente.`,
+        function() {
+            // Disable button and show loading
+            btn.prop('disabled', true);
+            btn.html('<i class="fas fa-spinner fa-spin"></i> Rulare scraper...');
+
+            $.ajax({
+                url: `/admin/permits/refresh/${issuer}`,
+                method: 'POST',
+                timeout: 360000, // 6 minutes
+                success: function(response) {
+                    if (response.success) {
+                        showSuccess(response.message, function() {
+                            location.reload();
+                        });
+                    } else {
+                        showError(response.error || 'Eroare necunoscută');
+                        btn.prop('disabled', false);
+                        btn.html(originalHtml);
+                    }
+                },
+                error: function(xhr) {
+                    const errorMsg = xhr.responseJSON?.error || 'Eroare necunoscută';
+                    showError(errorMsg);
+                    btn.prop('disabled', false);
+                    btn.html(originalHtml);
+                }
+            });
+        }
+    );
+}
+</script>
+{% endblock %}

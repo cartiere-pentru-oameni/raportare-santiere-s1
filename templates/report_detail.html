@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+
+{% block title %}Raport {{ report.id[:8] }} - Raportare Șantiere{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --cpo-green: #1E773B;
+        --cpo-navy: #171E42;
+        --cpo-light: #F6F6F9;
+    }
+    .report-detail-header {
+        background: var(--cpo-light);
+        padding: 30px 0;
+        margin: -15px -15px 30px -15px;
+        border-bottom: 3px solid var(--cpo-green);
+    }
+    .detail-card {
+        border-radius: 15px;
+        border: none;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        margin-bottom: 20px;
+    }
+    .status-badge {
+        padding: 8px 15px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 1rem;
+    }
+    .info-row {
+        padding: 15px 0;
+        border-bottom: 1px solid #eee;
+    }
+    .info-row:last-child {
+        border-bottom: none;
+    }
+    .info-label {
+        font-weight: 600;
+        color: var(--cpo-navy);
+        margin-bottom: 5px;
+    }
+    .info-value {
+        color: #555;
+    }
+    #map {
+        border-radius: 10px;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        height: 350px;
+    }
+    .comment-box {
+        background: var(--cpo-light);
+        border-left: 4px solid var(--cpo-green);
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="report-detail-header">
+    <div class="container">
+        <h2 class="font-weight-bold" style="color: var(--cpo-navy);">
+            <i class="fas fa-file-alt"></i> Detalii Raport
+        </h2>
+        <p class="mb-0" style="color: var(--cpo-navy);">
+            ID: <code>{{ report.id[:8] }}...</code>
+        </p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-10 mx-auto">
+            <!-- Alert Info -->
+            <div class="alert" style="background: var(--cpo-navy); color: white; border: none; border-radius: 15px; margin-bottom: 30px;">
+                <h5 class="mb-2">
+                    <i class="fas fa-info-circle" style="color: var(--cpo-green);"></i>
+                    <strong>Urmărire raport</strong>
+                </h5>
+                <p class="mb-2">
+                    <i class="fas fa-bookmark"></i> <strong>Salvează acest link</strong> pentru a verifica statusul raportului în viitor.
+                </p>
+                <p class="mb-0 small">
+                    <i class="fas fa-clipboard-check"></i> Vom verifica autorizația, vom contacta autoritățile dacă este cazul și vom actualiza statusul aici.
+                </p>
+            </div>
+
+            <!-- Status Card -->
+            <div class="card detail-card">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 style="color: var(--cpo-navy); margin: 0;">
+                            <i class="fas fa-info-circle"></i> Informații Generale
+                        </h4>
+                        {% if report.status == 'pending' %}
+                        <span class="status-badge" style="background: #ffc107; color: #000;">
+                            <i class="fas fa-clock"></i> În Așteptare
+                        </span>
+                        {% elif report.status == 'in-review' %}
+                        <span class="status-badge" style="background: #17a2b8; color: white;">
+                            <i class="fas fa-search"></i> În Verificare
+                        </span>
+                        {% elif report.status == 'validated' %}
+                        <span class="status-badge" style="background: #28a745; color: white;">
+                            <i class="fas fa-check-circle"></i> Validat
+                        </span>
+                        {% elif report.status == 'resolved' %}
+                        <span class="status-badge" style="background: #007bff; color: white;">
+                            <i class="fas fa-clipboard-check"></i> Rezolvat
+                        </span>
+                        {% elif report.status == 'rejected' %}
+                        <span class="status-badge" style="background: #dc3545; color: white;">
+                            <i class="fas fa-times-circle"></i> Respins
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <div class="info-row">
+                        <div class="info-label">
+                            <i class="fas fa-tag"></i> Tip Încălcare
+                        </div>
+                        <div class="info-value">{{ report.type }}</div>
+                    </div>
+
+                    <div class="info-row">
+                        <div class="info-label">
+                            <i class="fas fa-calendar"></i> Data Creării
+                        </div>
+                        <div class="info-value">{{ report.created_at }}</div>
+                    </div>
+
+                    {% if report.location.address %}
+                    <div class="info-row">
+                        <div class="info-label">
+                            <i class="fas fa-map-marker-alt"></i> Adresă
+                        </div>
+                        <div class="info-value">{{ report.location.address }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Map Card -->
+            <div class="card detail-card">
+                <div class="card-body p-4">
+                    <h5 style="color: var(--cpo-navy); margin-bottom: 20px;">
+                        <i class="fas fa-map"></i> Locație
+                    </h5>
+                    <div id="map"></div>
+                </div>
+            </div>
+
+            <!-- Description & Pictures (only if not pending) -->
+            {% if report.status != 'pending' %}
+                {% if report.description %}
+                <div class="card detail-card">
+                    <div class="card-body p-4">
+                        <h5 style="color: var(--cpo-navy); margin-bottom: 20px;">
+                            <i class="fas fa-align-left"></i> Descriere
+                        </h5>
+                        <p>{{ report.description }}</p>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if report.pictures %}
+                <div class="card detail-card">
+                    <div class="card-body p-4">
+                        <h5 style="color: var(--cpo-navy); margin-bottom: 20px;">
+                            <i class="fas fa-images"></i> Fotografii
+                        </h5>
+                        <div class="row">
+                            {% for pic in report.pictures %}
+                            <div class="col-md-4 mb-3">
+                                <a href="{{ pic.url }}" target="_blank">
+                                    <img src="{{ pic.url }}" class="img-fluid"
+                                         style="border-radius: 10px; box-shadow: 0 3px 10px rgba(0,0,0,0.1);"
+                                         alt="Fotografie {{ loop.index }}">
+                                </a>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            {% endif %}
+
+            <!-- Comments -->
+            {% if report.comments %}
+            <div class="card detail-card">
+                <div class="card-body p-4">
+                    <h5 style="color: var(--cpo-navy); margin-bottom: 20px;">
+                        <i class="fas fa-comments"></i> Comentarii Validator
+                    </h5>
+                    {% for comment in report.comments %}
+                    <div class="comment-box">
+                        <p class="mb-2">{{ comment.text }}</p>
+                        <small class="text-muted">
+                            <i class="fas fa-clock"></i> {{ comment.timestamp }}
+                        </small>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Back Button -->
+            <div class="text-center mb-4">
+                <a href="/reports" class="btn" style="background: var(--cpo-green); color: white; padding: 10px 30px; border-radius: 8px; font-weight: 600;">
+                    <i class="fas fa-arrow-left"></i> Înapoi la Hartă
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    var map = L.map('map').setView([{{ report.location.lat }}, {{ report.location.lng }}], 16);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    L.marker([{{ report.location.lat }}, {{ report.location.lng }}]).addTo(map);
+});
+</script>
+{% endblock %}

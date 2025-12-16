@@ -1,0 +1,304 @@
+{% extends "base.html" %}
+
+{% block title %}Cauta Autorizatia - Raportare Santiere Sector 1{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --cpo-green: #1E773B;
+        --cpo-navy: #171E42;
+        --cpo-light: #F6F6F9;
+    }
+    .search-header {
+        background: var(--cpo-light);
+        padding: 40px 0;
+        margin: -15px -15px 30px -15px;
+        border-bottom: 3px solid var(--cpo-green);
+    }
+    .search-box {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+    .btn-search {
+        background: var(--cpo-green);
+        color: white;
+        border: none;
+        padding: 12px 40px;
+        font-weight: 600;
+    }
+    .btn-search:hover {
+        background: var(--cpo-navy);
+        color: white;
+    }
+    .permit-card {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+        margin-bottom: 20px;
+        border-left: 4px solid var(--cpo-green);
+        transition: all 0.3s ease;
+    }
+    .permit-card:hover {
+        box-shadow: 0 5px 20px rgba(30,119,59,0.2);
+        transform: translateY(-2px);
+    }
+    .permit-header {
+        background: var(--cpo-navy);
+        color: white;
+        padding: 15px 20px;
+        border-radius: 10px 10px 0 0;
+    }
+    .badge-ps1 {
+        background: var(--cpo-green);
+        color: white;
+    }
+    .badge-pmb {
+        background: var(--cpo-navy);
+        color: white;
+    }
+    .metadata-badge {
+        display: inline-block;
+        padding: 8px 15px;
+        border-radius: 8px;
+        font-size: 14px;
+        margin: 5px;
+    }
+    .loading-spinner {
+        display: none;
+        text-align: center;
+        padding: 30px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="search-header">
+    <div class="container">
+        <h1 class="display-4 font-weight-bold" style="color: var(--cpo-navy);">
+            <i class="fas fa-search"></i> Cauta Autorizatia
+        </h1>
+        <p class="lead" style="color: var(--cpo-navy);">
+            Verifica autorizatiile de construire din Sector 1, București
+        </p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Metadata Info -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert" style="background: white; border: 2px solid var(--cpo-green);">
+                <div id="metadata-info">
+                    <i class="fas fa-info-circle" style="color: var(--cpo-green);"></i>
+                    <strong>Incarcam informatii...</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Box -->
+    <div class="search-box mb-5">
+        <form id="search-form">
+            <div class="row">
+                <div class="col-md-8 mb-3">
+                    <label class="font-weight-bold" style="color: var(--cpo-navy);">Adresa (strada, numar)</label>
+                    <input type="text"
+                           id="search-query"
+                           class="form-control form-control-lg"
+                           placeholder="Ex: Dorobanti 123, Calea Victoriei, etc."
+                           required
+                           minlength="3">
+                    <small class="text-muted">Introdu minim 3 caractere</small>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="font-weight-bold" style="color: var(--cpo-navy);">Sursa</label>
+                    <select id="search-issuer" class="form-control form-control-lg">
+                        <option value="all">Toate</option>
+                        <option value="ps1">Primaria Sector 1</option>
+                        <option value="pmb">Primaria Municipiului</option>
+                    </select>
+                </div>
+            </div>
+            <div class="text-center">
+                <button type="submit" class="btn btn-search btn-lg">
+                    <i class="fas fa-search"></i> Cauta Autorizatii
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div class="loading-spinner" id="loading">
+        <div class="spinner-border" style="color: var(--cpo-green);" role="status">
+            <span class="sr-only">Loading...</span>
+        </div>
+        <p class="mt-3" style="color: var(--cpo-navy);">Se cauta autorizatiile...</p>
+    </div>
+
+    <!-- Results -->
+    <div id="results-container" style="display: none;">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 style="color: var(--cpo-navy);">
+                <i class="fas fa-list"></i> Rezultate: <span id="results-count">0</span>
+            </h3>
+        </div>
+        <div id="results-list"></div>
+    </div>
+
+    <!-- No Results -->
+    <div id="no-results" style="display: none;">
+        <div class="text-center py-5">
+            <i class="fas fa-inbox fa-4x mb-3" style="color: var(--cpo-navy); opacity: 0.3;"></i>
+            <h4 style="color: var(--cpo-navy);">Nu am gasit autorizatii</h4>
+            <p class="text-muted">Incearca sa cauti dupa alta adresa</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Load metadata on page load
+    loadMetadata();
+
+    // Search form submit
+    $('#search-form').on('submit', function(e) {
+        e.preventDefault();
+        performSearch();
+    });
+});
+
+function loadMetadata() {
+    $.ajax({
+        url: '/api/permits/metadata',
+        method: 'GET',
+        success: function(response) {
+            if (response.success && response.metadata) {
+                let html = '<i class="fas fa-database" style="color: var(--cpo-green);"></i> ';
+
+                response.metadata.forEach(function(meta) {
+                    const issuerName = meta.issuer === 'ps1' ? 'Primaria Sector 1' : 'Primaria Municipiului Bucuresti';
+                    const badgeClass = meta.issuer === 'ps1' ? 'badge-ps1' : 'badge-pmb';
+                    const lastUpdate = meta.last_scraped_at ? new Date(meta.last_scraped_at).toLocaleDateString('ro-RO') : 'Niciodata';
+
+                    html += `<span class="metadata-badge ${badgeClass}">
+                        <strong>${issuerName}:</strong> ${meta.total_count} autorizatii (${lastUpdate})
+                    </span>`;
+                });
+
+                $('#metadata-info').html(html);
+            }
+        },
+        error: function() {
+            $('#metadata-info').html('<i class="fas fa-exclamation-triangle" style="color: #dc3545;"></i> Eroare la incarcarea informatiilor');
+        }
+    });
+}
+
+function performSearch() {
+    const query = $('#search-query').val().trim();
+    const issuer = $('#search-issuer').val();
+
+    if (query.length < 3) {
+        showWarning('Te rog introdu minim 3 caractere');
+        return;
+    }
+
+    // Show loading
+    $('#loading').show();
+    $('#results-container').hide();
+    $('#no-results').hide();
+
+    $.ajax({
+        url: '/api/permits/search',
+        method: 'GET',
+        data: {
+            q: query,
+            issuer: issuer,
+            limit: 50
+        },
+        success: function(response) {
+            $('#loading').hide();
+
+            if (response.success && response.permits && response.permits.length > 0) {
+                displayResults(response.permits);
+            } else {
+                $('#no-results').show();
+            }
+        },
+        error: function(xhr) {
+            $('#loading').hide();
+            showError(xhr.responseJSON?.error || 'Eroare necunoscută');
+        }
+    });
+}
+
+function displayResults(permits) {
+    $('#results-count').text(permits.length);
+    $('#results-container').show();
+
+    let html = '';
+
+    permits.forEach(function(permit) {
+        const badgeClass = permit.issuer === 'ps1' ? 'badge-ps1' : 'badge-pmb';
+        const issuerName = permit.issuer === 'ps1' ? 'Primaria Sector 1' : 'Primaria Municipiului Bucuresti';
+
+        html += `
+            <div class="permit-card">
+                <div class="permit-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-building"></i> ${escapeHtml(permit.address)}</h5>
+                        <span class="badge ${badgeClass}">${issuerName}</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    ${renderPermitData(permit.data)}
+                    ${permit.source_url ? `<div class="mt-3"><a href="${permit.source_url}" target="_blank" class="btn btn-sm" style="background: var(--cpo-green); color: white;"><i class="fas fa-external-link-alt"></i> Sursa</a></div>` : ''}
+                </div>
+            </div>
+        `;
+    });
+
+    $('#results-list').html(html);
+}
+
+function renderPermitData(data) {
+    let html = '<div class="row">';
+
+    // Display key fields
+    for (const [key, value] of Object.entries(data)) {
+        if (value && value.trim() !== '') {
+            // Check if value is a URL
+            const isUrl = value.startsWith('http://') || value.startsWith('https://');
+
+            html += `
+                <div class="col-md-6 mb-2">
+                    <small class="text-muted">${escapeHtml(key)}</small><br>
+                    ${isUrl
+                        ? `<a href="${escapeHtml(value)}" target="_blank" style="color: var(--cpo-green); font-weight: 600;"><i class="fas fa-external-link-alt"></i> Deschide Document</a>`
+                        : `<strong>${escapeHtml(value)}</strong>`
+                    }
+                </div>
+            `;
+        }
+    }
+
+    html += '</div>';
+    return html;
+}
+
+function escapeHtml(text) {
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return String(text).replace(/[&<>"']/g, function(m) { return map[m]; });
+}
+</script>
+{% endblock %}

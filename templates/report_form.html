@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+
+{% block title %}Raportează Șantier - Raportare Șantiere{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --cpo-green: #1E773B;
+        --cpo-navy: #171E42;
+        --cpo-light: #F6F6F9;
+    }
+    .report-header {
+        background: var(--cpo-light);
+        padding: 40px 0;
+        margin: -15px -15px 30px -15px;
+        border-bottom: 3px solid var(--cpo-green);
+    }
+    .report-card {
+        border-radius: 15px;
+        border: none;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        margin-bottom: 30px;
+    }
+    .btn-submit {
+        background: var(--cpo-green);
+        color: white;
+        border: none;
+        padding: 12px 40px;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    .btn-submit:hover {
+        background: var(--cpo-navy);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(23,30,66,0.3);
+    }
+    .form-control:focus {
+        border-color: var(--cpo-green);
+        box-shadow: 0 0 0 0.2rem rgba(30,119,59,0.25);
+    }
+    .custom-control-input:checked ~ .custom-control-label::before {
+        background-color: var(--cpo-green);
+        border-color: var(--cpo-green);
+    }
+    #map {
+        border-radius: 10px;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="report-header">
+    <div class="container">
+        <h1 class="display-4 font-weight-bold" style="color: var(--cpo-navy);">
+            <i class="fas fa-plus-circle"></i> Raportează Șantier
+        </h1>
+        <p class="lead" style="color: var(--cpo-navy);">
+            Contribuie la un Sector 1 mai bun. Raportează construcțiile neconforme.
+        </p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-10 mx-auto">
+            <!-- Important Info Alert -->
+            <div class="alert" style="background: white; border: 2px solid var(--cpo-green); border-radius: 15px; margin-bottom: 30px;">
+                <h5 style="color: var(--cpo-navy);">
+                    <i class="fas fa-exclamation-triangle" style="color: var(--cpo-green);"></i>
+                    <strong>Înainte de a raporta</strong>
+                </h5>
+                <p class="mb-2">Te rugăm să verifici dacă există o autorizație de construire validă:</p>
+                <ol class="mb-0">
+                    <li class="mb-2">
+                        <a href="/permits" style="color: var(--cpo-green); font-weight: 600;" target="_blank">
+                            <i class="fas fa-database"></i> Caută autorizația
+                        </a> în baza noastră de date (PS1 + PMB)
+                    </li>
+                    <li>
+                        <a href="/tutorial" style="color: var(--cpo-green); font-weight: 600;" target="_blank">
+                            <i class="fas fa-book-open"></i> Consultă ghidul "Tutorial Verificare Manuală"
+                        </a>
+                    </li>
+                </ol>
+            </div>
+
+            <!-- Report Form Card -->
+            <div class="card report-card">
+                <div class="card-body p-4">
+                    <h4 class="mb-4" style="color: var(--cpo-navy);">
+                        <i class="fas fa-edit"></i> Formular Raportare
+                    </h4>
+
+                    <form id="report-form">
+                        <div class="form-group">
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input" id="verified-checkbox" name="verified" required>
+                                <label class="custom-control-label" for="verified-checkbox">
+                                    Am căutat autorizația în <a href="/permits" target="_blank">baza de date</a> și am urmat pașii din <a href="/tutorial" target="_blank">Tutorial Verificare Manuală</a>. Confirm că nu există autorizație validă. *
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input" id="sector1-checkbox" name="sector1" required>
+                                <label class="custom-control-label" for="sector1-checkbox">
+                                    Confirm că locația se află în <strong>Sectorul 1, București</strong>. *
+                                </label>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <div class="form-group">
+                            <label>Tip încălcare *</label>
+                            <select class="form-control" name="type" required>
+                                <option value="">Selectează...</option>
+                                <option value="no-paperwork">Fără autorizație</option>
+                                <option value="others">Altele</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Locație pe hartă *</label>
+                            <div id="map" style="height: 400px;"></div>
+                            <small class="form-text text-muted">Click pe hartă pentru a selecta locația</small>
+                            <input type="hidden" name="lat" id="lat" required>
+                            <input type="hidden" name="lng" id="lng" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Adresă (opțional)</label>
+                            <input type="text" class="form-control" name="address" placeholder="ex: Str. Mihai Eminescu 15">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Descriere (opțional)</label>
+                            <textarea class="form-control" name="description" rows="3"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Poze (opțional)</label>
+                            <input type="file" class="form-control-file" name="pictures" multiple accept="image/jpeg,image/png,image/webp">
+                            <small class="form-text text-muted">Max 10 poze, 10MB fiecare. Doar JPEG, PNG, WebP. EXIF automat șters.</small>
+                        </div>
+
+                        <button type="submit" class="btn btn-submit">
+                            <i class="fas fa-paper-plane"></i> Trimite Raportul
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Privacy Notice -->
+            <div class="alert" style="background: var(--cpo-navy); color: white; border: none; border-radius: 15px; margin-bottom: 30px;">
+                <div class="text-center">
+                    <i class="fas fa-shield-alt fa-2x mb-2" style="color: var(--cpo-green);"></i>
+                    <h5 class="font-weight-bold">Anonimitate 100% Garantată</h5>
+                    <p class="mb-0">
+                        Nu colectăm date personale sau IP-uri. Toate pozele sunt procesate automat pentru a elimina metadatele EXIF.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    var map = L.map('map').setView([44.4268, 26.1025], 13);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    var marker = null;
+
+    map.on('click', function(e) {
+        if (marker) {
+            map.removeLayer(marker);
+        }
+        marker = L.marker(e.latlng).addTo(map);
+        $('#lat').val(e.latlng.lat);
+        $('#lng').val(e.latlng.lng);
+    });
+
+    $('#report-form').on('submit', function(e) {
+        e.preventDefault();
+
+        var formData = new FormData(this);
+
+        // Validate location
+        if (!$('#lat').val() || !$('#lng').val()) {
+            showWarning('Vă rugăm selectați o locație pe hartă.');
+            return;
+        }
+
+        // Disable submit button
+        var $submitBtn = $(this).find('button[type="submit"]');
+        $submitBtn.prop('disabled', true).text('Se trimite...');
+
+        $.ajax({
+            url: '/api/reports',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                showSuccess('Raport trimis cu succes! Mulțumim!', function() {
+                    window.location.href = '/report/' + response.report_id;
+                });
+            },
+            error: function(xhr) {
+                var errorMsg = xhr.responseJSON?.error || 'A apărut o eroare.';
+                showError(errorMsg);
+                $submitBtn.prop('disabled', false).text('Trimite raportul');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

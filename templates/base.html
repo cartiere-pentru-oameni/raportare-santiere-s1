@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Raportare Șantiere{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        .main-sidebar {
+            background-color: #171E42 !important;
+        }
+        .sidebar-dark-primary .nav-sidebar > .nav-item > .nav-link.active,
+        .sidebar-dark-primary .nav-sidebar > .nav-item > .nav-link:hover {
+            background-color: #1E773B !important;
+        }
+        .brand-link {
+            background-color: #171E42 !important;
+            border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+            text-align: center !important;
+            display: block !important;
+            padding: 1.5rem 0.5rem !important;
+        }
+        .brand-link .brand-image {
+            max-height: 80px !important;
+            width: auto !important;
+            opacity: 1 !important;
+            margin: 0 auto 0.5rem auto !important;
+            display: block !important;
+            float: none !important;
+        }
+        .brand-link .brand-text {
+            display: block !important;
+            margin-left: 0 !important;
+            font-size: 1.1rem !important;
+            font-weight: 500 !important;
+            color: white !important;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="hold-transition sidebar-mini">
+<div class="wrapper">
+    <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+        <ul class="navbar-nav">
+            <li class="nav-item">
+                <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
+            </li>
+        </ul>
+        <ul class="navbar-nav ml-auto">
+            {% if session.get('user_id') %}
+            <li class="nav-item">
+                <span class="nav-link"><i class="fas fa-user"></i> {{ session.username }} ({{ session.role }})</span>
+            </li>
+            <li class="nav-item">
+                <a href="/logout" class="nav-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </li>
+            {% else %}
+            <li class="nav-item">
+                <a href="/info" class="nav-link">Informații</a>
+            </li>
+            <li class="nav-item">
+                <a href="/login" class="nav-link"><i class="fas fa-sign-in-alt"></i> Login</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+
+    <aside class="main-sidebar sidebar-dark-primary elevation-4">
+        <a href="/" class="brand-link">
+            <img src="/static/images/logo.png" alt="CPO Logo" class="brand-image">
+            <span class="brand-text">Raportare Santiere Sector 1</span>
+        </a>
+        <div class="sidebar">
+            <nav class="mt-2">
+                <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
+                    <li class="nav-item">
+                        <a href="/" class="nav-link">
+                            <i class="nav-icon fas fa-home"></i>
+                            <p>Acasă</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/permits" class="nav-link">
+                            <i class="nav-icon fas fa-file-alt"></i>
+                            <p>Caută Autorizația</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/report/new" class="nav-link">
+                            <i class="nav-icon fas fa-plus"></i>
+                            <p>Raportează</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/reports" class="nav-link">
+                            <i class="nav-icon fas fa-map"></i>
+                            <p>Hartă</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/tutorial" class="nav-link">
+                            <i class="nav-icon fas fa-search"></i>
+                            <p>Tutorial Verificare Manuală</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/statistics" class="nav-link">
+                            <i class="nav-icon fas fa-chart-bar"></i>
+                            <p>Statistici</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/contact" class="nav-link">
+                            <i class="nav-icon fas fa-envelope"></i>
+                            <p>Contact Anonim</p>
+                        </a>
+                    </li>
+                    {% if session.get('role') in ['admin', 'validator'] %}
+                    <li class="nav-header">VALIDARE</li>
+                    <li class="nav-item">
+                        <a href="/validator" class="nav-link">
+                            <i class="nav-icon fas fa-check-circle"></i>
+                            <p>Dashboard Validator</p>
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% if session.get('role') == 'admin' %}
+                    <li class="nav-header">ADMINISTRARE</li>
+                    <li class="nav-item">
+                        <a href="/admin" class="nav-link">
+                            <i class="nav-icon fas fa-tachometer-alt"></i>
+                            <p>Dashboard Admin</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/admin/users" class="nav-link">
+                            <i class="nav-icon fas fa-users"></i>
+                            <p>Utilizatori</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/admin/reports" class="nav-link">
+                            <i class="nav-icon fas fa-file-alt"></i>
+                            <p>Rapoarte</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/admin/permits" class="nav-link">
+                            <i class="nav-icon fas fa-database"></i>
+                            <p>Autorizatii (Data)</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/admin/contact" class="nav-link">
+                            <i class="nav-icon fas fa-envelope"></i>
+                            <p>Mesaje Contact</p>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </aside>
+
+    <div class="content-wrapper">
+        <section class="content">
+            <div class="container-fluid">
+                {% block content %}{% endblock %}
+            </div>
+        </section>
+    </div>
+
+    <footer class="main-footer" style="background: #f4f6f9; color: #333; padding: 30px 0; border-top: 3px solid #1E773B;">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <h5 style="color: #171E42; font-weight: 700; margin-bottom: 15px;">
+                        <i class="fas fa-home" style="color: #1E773B;"></i> Despre Platformă
+                    </h5>
+                    <p style="font-size: 14px; line-height: 1.6; color: #555;">
+                        <strong>Raportare Șantiere</strong> este o platformă transparentă pentru cetățenii Sectorului 1, București, care doresc să raporteze construcții neconforme.
+                    </p>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <h5 style="color: #171E42; font-weight: 700; margin-bottom: 15px;">
+                        <i class="fas fa-users" style="color: #1E773B;"></i> Despre Asociație
+                    </h5>
+                    <p style="font-size: 14px; line-height: 1.6; color: #555;">
+                        <strong>Cartiere Pentru Oameni</strong> este o asociație non-profit dedicată îmbunătățirii calității vieții în comunitățile urbane prin transparență și participare civică.
+                    </p>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <h5 style="color: #171E42; font-weight: 700; margin-bottom: 15px;">
+                        <i class="fas fa-link" style="color: #1E773B;"></i> Link-uri Utile
+                    </h5>
+                    <div style="font-size: 14px; line-height: 2;">
+                        <a href="https://www.facebook.com/cartiereptoameni" target="_blank" style="color: #333; text-decoration: none; display: block; margin-bottom: 8px; transition: color 0.3s;">
+                            <i class="fab fa-facebook" style="color: #1E773B;"></i> Facebook - Cartiere Pentru Oameni
+                        </a>
+                        <a href="/contact" style="color: #333; text-decoration: none; display: block; transition: color 0.3s;">
+                            <i class="fas fa-paper-plane" style="color: #1E773B;"></i> Contact Anonim
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <hr style="border-color: #ddd; margin: 20px 0;">
+            <div class="row">
+                <div class="col-12 text-center">
+                    <p style="margin: 0; font-size: 13px; color: #666;">
+                        &copy; 2024 Cartiere Pentru Oameni. Toate raportările sunt anonime și confidențiale.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="/static/js/modals.js"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

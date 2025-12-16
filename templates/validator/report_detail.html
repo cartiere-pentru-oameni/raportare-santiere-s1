@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}Review Report #{{ report.id }} - Raportare Șantiere{% endblock %}
+
+{% block content %}
+<div class="row mt-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Raport #{{ report.id }}</h3>
+                <div class="card-tools">
+                    <a href="/validator" class="btn btn-sm btn-secondary">Înapoi</a>
+                </div>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-3">Tip:</dt>
+                    <dd class="col-sm-9">
+                        {% if report.type == 'illegal' %}
+                        <span class="badge badge-danger">Șantier Ilegal</span>
+                        {% elif report.type == 'no-permit' %}
+                        <span class="badge badge-warning">Fără Autorizație Vizibilă</span>
+                        {% elif report.type == 'safety' %}
+                        <span class="badge badge-info">Probleme Securitate</span>
+                        {% elif report.type == 'noise' %}
+                        <span class="badge badge-secondary">Zgomot Excesiv</span>
+                        {% endif %}
+                    </dd>
+
+                    <dt class="col-sm-3">Status:</dt>
+                    <dd class="col-sm-9">
+                        {% if report.status == 'pending' %}
+                        <span class="badge badge-warning">Pending</span>
+                        {% elif report.status == 'in-review' %}
+                        <span class="badge badge-info">In Review</span>
+                        {% elif report.status == 'validated' %}
+                        <span class="badge badge-success">Validated</span>
+                        {% elif report.status == 'resolved' %}
+                        <span class="badge badge-primary">Resolved</span>
+                        {% elif report.status == 'rejected' %}
+                        <span class="badge badge-danger">Rejected</span>
+                        {% endif %}
+                    </dd>
+
+                    <dt class="col-sm-3">Data:</dt>
+                    <dd class="col-sm-9">{{ report.created_at }}</dd>
+
+                    <dt class="col-sm-3">Raportat de:</dt>
+                    <dd class="col-sm-9">
+                        {% if report.submitted_by_username %}
+                        <span class="badge badge-info">
+                            <i class="fas fa-user-shield"></i> {{ report.submitted_by_username }} (Official)
+                        </span>
+                        {% else %}
+                        <span class="text-muted">Cetățean (Anonim)</span>
+                        {% endif %}
+                    </dd>
+
+                    <dt class="col-sm-3">Locație:</dt>
+                    <dd class="col-sm-9">
+                        {{ report.address or 'Lat: %.6f, Lng: %.6f'|format(report.location_lat, report.location_lng) }}
+                    </dd>
+
+                    <dt class="col-sm-3">Descriere:</dt>
+                    <dd class="col-sm-9">{{ report.description or 'Fără descriere' }}</dd>
+                </dl>
+
+                <div id="map" style="height: 300px; margin-top: 20px;"></div>
+
+                <h5 class="mt-4">Fotografii ({{ pictures|length }})</h5>
+                <div class="row">
+                    {% for picture in pictures %}
+                    <div class="col-md-4 mb-3">
+                        <a href="{{ picture.url }}" target="_blank">
+                            <img src="{{ picture.url }}" class="img-fluid img-thumbnail" alt="Poza {{ loop.index }}">
+                        </a>
+                    </div>
+                    {% else %}
+                    <div class="col-12">
+                        <p class="text-muted">Nicio fotografie atașată</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <h4>Comentarii</h4>
+            </div>
+            <div class="card-body">
+                {% for comment in comments %}
+                <div class="mb-3">
+                    <strong>{{ comment.author_username }}</strong>
+                    <small class="text-muted">{{ comment.created_at }}</small>
+                    <p>{{ comment.content }}</p>
+                </div>
+                {% else %}
+                <p class="text-muted">Niciun comentariu</p>
+                {% endfor %}
+
+                <form id="comment-form" class="mt-3">
+                    <div class="form-group">
+                        <label>Adaugă comentariu:</label>
+                        <textarea class="form-control" name="content" rows="3" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Adaugă Comentariu</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h4>Acțiuni</h4>
+            </div>
+            <div class="card-body">
+                <form id="status-form">
+                    <div class="form-group">
+                        <label>Schimbă Status:</label>
+                        <select class="form-control" name="status">
+                            <option value="pending" {% if report.status == 'pending' %}selected{% endif %}>Pending</option>
+                            <option value="in-review" {% if report.status == 'in-review' %}selected{% endif %}>In Review</option>
+                            <option value="validated" {% if report.status == 'validated' %}selected{% endif %}>Validated</option>
+                            <option value="rejected" {% if report.status == 'rejected' %}selected{% endif %}>Rejected</option>
+                            <option value="resolved" {% if report.status == 'resolved' %}selected{% endif %}>Resolved</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-success btn-block">Actualizează Status</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Initialize map
+    var map = L.map('map').setView([{{ report.location_lat }}, {{ report.location_lng }}], 16);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+    L.marker([{{ report.location_lat }}, {{ report.location_lng }}]).addTo(map);
+
+    // Status update
+    $('#status-form').on('submit', function(e) {
+        e.preventDefault();
+        var status = $(this).find('select[name="status"]').val();
+
+        $.ajax({
+            url: '/validator/report/{{ report.id }}/status',
+            type: 'POST',
+            data: {status: status},
+            success: function() {
+                showSuccess('Status actualizat!', function() {
+                    location.reload();
+                });
+            },
+            error: function(xhr) {
+                showError(xhr.responseJSON?.error || 'Eroare la actualizarea statusului');
+            }
+        });
+    });
+
+    // Comment submit
+    $('#comment-form').on('submit', function(e) {
+        e.preventDefault();
+        var formData = $(this).serialize();
+
+        $.ajax({
+            url: '/validator/report/{{ report.id }}/comment',
+            type: 'POST',
+            data: formData,
+            success: function() {
+                showSuccess('Comentariu adăugat!', function() {
+                    location.reload();
+                });
+            },
+            error: function(xhr) {
+                showError(xhr.responseJSON?.error || 'Eroare la adăugarea comentariului');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

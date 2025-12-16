@@ -1,0 +1,277 @@
+{% extends "base.html" %}
+
+{% block title %}Statistici - Raportare Șantiere{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --cpo-green: #1E773B;
+        --cpo-navy: #171E42;
+        --cpo-light: #F6F6F9;
+    }
+    .stats-header {
+        background: var(--cpo-light);
+        padding: 40px 0;
+        margin: -15px -15px 30px -15px;
+        border-bottom: 3px solid var(--cpo-green);
+    }
+    .stat-card {
+        border-radius: 15px;
+        border: none;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        margin-bottom: 20px;
+    }
+    .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(30,119,59,0.3);
+    }
+    .stat-number {
+        font-size: 3rem;
+        font-weight: 700;
+        margin: 0;
+    }
+    .stat-label {
+        font-size: 1rem;
+        color: #666;
+        margin-bottom: 0;
+    }
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin-bottom: 30px;
+    }
+    .progress-bar-cpo {
+        background: var(--cpo-green);
+    }
+    .section-title {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--cpo-navy);
+        margin-bottom: 20px;
+    }
+    .type-badge {
+        display: inline-block;
+        padding: 10px 20px;
+        border-radius: 8px;
+        margin: 5px;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="stats-header">
+    <div class="container">
+        <h1 class="display-4 font-weight-bold" style="color: var(--cpo-navy);">
+            <i class="fas fa-chart-line"></i> Statistici Platformă
+        </h1>
+        <p class="lead" style="color: var(--cpo-navy);">
+            Transparență totală: Urmărește impactul rapoartelor din Sectorul 1
+        </p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Overview Cards -->
+    <div class="row mb-5">
+        <div class="col-lg-3 col-6 mb-4">
+            <div class="stat-card bg-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-file-alt fa-3x mb-3" style="color: var(--cpo-navy);"></i>
+                    <h3 id="total-reports" class="stat-number" style="color: var(--cpo-navy);">-</h3>
+                    <p class="stat-label">Total Rapoarte</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-6 mb-4">
+            <div class="stat-card" style="background: var(--cpo-green); color: white;">
+                <div class="card-body text-center">
+                    <i class="fas fa-check-circle fa-3x mb-3"></i>
+                    <h3 id="validated-reports" class="stat-number">-</h3>
+                    <p class="stat-label" style="color: white;">Validate</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-6 mb-4">
+            <div class="stat-card" style="background: var(--cpo-navy); color: white;">
+                <div class="card-body text-center">
+                    <i class="fas fa-clipboard-check fa-3x mb-3"></i>
+                    <h3 id="resolved-reports" class="stat-number">-</h3>
+                    <p class="stat-label" style="color: white;">Rezolvate</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-6 mb-4">
+            <div class="stat-card bg-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-percentage fa-3x mb-3" style="color: var(--cpo-green);"></i>
+                    <h3 id="success-rate" class="stat-number" style="color: var(--cpo-green);">-</h3>
+                    <p class="stat-label">Rată Validare</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Breakdown -->
+    <div class="row mb-5">
+        <div class="col-md-12">
+            <div class="stat-card">
+                <div class="card-body">
+                    <h3 class="section-title">
+                        <i class="fas fa-tasks" style="color: var(--cpo-green);"></i> Rapoarte pe Status
+                    </h3>
+                    <div id="status-breakdown"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Type Breakdown -->
+    <div class="row mb-5">
+        <div class="col-md-12">
+            <div class="stat-card">
+                <div class="card-body">
+                    <h3 class="section-title">
+                        <i class="fas fa-list" style="color: var(--cpo-green);"></i> Rapoarte pe Tip
+                    </h3>
+                    <div id="type-breakdown"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info Box -->
+    <div class="row mb-5">
+        <div class="col-md-12">
+            <div class="alert" style="background: var(--cpo-navy); color: white; border: none; border-radius: 15px;">
+                <h4 class="mb-3">
+                    <i class="fas fa-info-circle" style="color: var(--cpo-green);"></i>
+                    Cum funcționează?
+                </h4>
+                <p class="mb-2">
+                    <i class="fas fa-check" style="color: var(--cpo-green);"></i>
+                    <strong>Pending:</strong> Raport nou trimis, așteaptă verificare
+                </p>
+                <p class="mb-2">
+                    <i class="fas fa-check" style="color: var(--cpo-green);"></i>
+                    <strong>In Review:</strong> Verificăm autorizația și informațiile
+                </p>
+                <p class="mb-2">
+                    <i class="fas fa-check" style="color: var(--cpo-green);"></i>
+                    <strong>Validated:</strong> Raportul este valid, contactăm autoritățile
+                </p>
+                <p class="mb-2">
+                    <i class="fas fa-check" style="color: var(--cpo-green);"></i>
+                    <strong>Resolved:</strong> Problema a fost rezolvată!
+                </p>
+                <p class="mb-0">
+                    <i class="fas fa-times" style="color: #ff6b6b;"></i>
+                    <strong>Rejected:</strong> Raportul nu este valid (există autorizație sau nu este în Sector 1)
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Status translations and colors
+    const statusInfo = {
+        'pending': { label: 'În Așteptare', color: '#ffc107', icon: 'clock' },
+        'in-review': { label: 'În Verificare', color: '#17a2b8', icon: 'search' },
+        'validated': { label: 'Validate', color: '#28a745', icon: 'check-circle' },
+        'resolved': { label: 'Rezolvate', color: '#007bff', icon: 'clipboard-check' },
+        'rejected': { label: 'Respinse', color: '#dc3545', icon: 'times-circle' }
+    };
+
+    const typeInfo = {
+        'illegal': { label: 'Construcție Ilegală', color: '#dc3545', icon: 'ban' },
+        'no-permit': { label: 'Fără Autorizație', color: '#ffc107', icon: 'file-excel' },
+        'safety': { label: 'Probleme Securitate', color: '#17a2b8', icon: 'hard-hat' },
+        'noise': { label: 'Zgomot Excesiv', color: '#6c757d', icon: 'volume-up' }
+    };
+
+    $.getJSON('/api/statistics', function(data) {
+        // Calculate totals
+        let totalReports = 0;
+        let validatedReports = data.by_status['validated'] || 0;
+        let resolvedReports = data.by_status['resolved'] || 0;
+
+        for (let status in data.by_status) {
+            totalReports += data.by_status[status];
+        }
+
+        // Success rate (validated + resolved / total)
+        let successRate = totalReports > 0
+            ? Math.round(((validatedReports + resolvedReports) / totalReports) * 100)
+            : 0;
+
+        // Update overview cards
+        $('#total-reports').text(totalReports);
+        $('#validated-reports').text(validatedReports);
+        $('#resolved-reports').text(resolvedReports);
+        $('#success-rate').text(successRate + '%');
+
+        // Render status breakdown with progress bars
+        let statusHtml = '';
+        for (let status in data.by_status) {
+            const count = data.by_status[status];
+            const percentage = totalReports > 0 ? Math.round((count / totalReports) * 100) : 0;
+            const info = statusInfo[status] || { label: status, color: '#6c757d', icon: 'circle' };
+
+            statusHtml += `
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span style="font-weight: 600; color: var(--cpo-navy);">
+                            <i class="fas fa-${info.icon}" style="color: ${info.color};"></i>
+                            ${info.label}
+                        </span>
+                        <span style="font-weight: 700; color: ${info.color};">${count} (${percentage}%)</span>
+                    </div>
+                    <div class="progress" style="height: 25px; border-radius: 10px;">
+                        <div class="progress-bar" role="progressbar"
+                             style="width: ${percentage}%; background: ${info.color};"
+                             aria-valuenow="${percentage}" aria-valuemin="0" aria-valuemax="100">
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        $('#status-breakdown').html(statusHtml);
+
+        // Render type breakdown with badges
+        let typeHtml = '<div class="row">';
+        for (let type in data.by_type) {
+            const count = data.by_type[type];
+            const info = typeInfo[type] || { label: type, color: '#6c757d', icon: 'tag' };
+
+            typeHtml += `
+                <div class="col-md-6 col-lg-3 mb-3">
+                    <div class="card stat-card" style="border-left: 4px solid ${info.color};">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="mr-3">
+                                    <i class="fas fa-${info.icon} fa-2x" style="color: ${info.color};"></i>
+                                </div>
+                                <div>
+                                    <h4 class="mb-0" style="color: ${info.color}; font-weight: 700;">${count}</h4>
+                                    <p class="mb-0 text-muted small">${info.label}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        typeHtml += '</div>';
+        $('#type-breakdown').html(typeHtml);
+    }).fail(function() {
+        showError('Nu am putut încărca statisticile. Te rugăm să reîncerci.');
+    });
+});
+</script>
+{% endblock %}

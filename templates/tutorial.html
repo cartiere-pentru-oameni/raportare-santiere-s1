@@ -1,0 +1,312 @@
+{% extends "base.html" %}
+
+{% block title %}Tutorial Verificare - Raportare Șantiere{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --cpo-green: #1E773B;
+        --cpo-navy: #171E42;
+        --cpo-light: #F6F6F9;
+    }
+    .tutorial-header {
+        background: var(--cpo-light);
+        padding: 40px 0;
+        margin: -15px -15px 30px -15px;
+        border-bottom: 3px solid var(--cpo-green);
+    }
+    .tutorial-card {
+        border-radius: 15px;
+        border: none;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        margin-bottom: 30px;
+    }
+    .step-section {
+        padding: 30px;
+        border-bottom: 1px solid #eee;
+    }
+    .step-section:last-child {
+        border-bottom: none;
+    }
+    .step-icon {
+        width: 50px;
+        height: 50px;
+        background: var(--cpo-green);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 15px;
+    }
+    .step-title {
+        color: var(--cpo-navy);
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 15px;
+    }
+    .btn-cpo {
+        background: var(--cpo-green);
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: inline-block;
+        text-decoration: none;
+    }
+    .btn-cpo:hover {
+        background: var(--cpo-navy);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(23,30,66,0.3);
+        text-decoration: none;
+    }
+    .btn-cpo-outline {
+        background: white;
+        color: var(--cpo-green);
+        border: 2px solid var(--cpo-green);
+        padding: 10px 25px;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: inline-block;
+        text-decoration: none;
+        margin-right: 10px;
+        margin-bottom: 10px;
+    }
+    .btn-cpo-outline:hover {
+        background: var(--cpo-green);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(30,119,59,0.3);
+        text-decoration: none;
+    }
+    .alert-cpo {
+        border-radius: 10px;
+        border: none;
+        padding: 20px;
+        margin: 20px 0;
+    }
+    .alert-warning-cpo {
+        background: #fff3cd;
+        border-left: 4px solid #ffc107;
+    }
+    .alert-info-cpo {
+        background: #d1ecf1;
+        border-left: 4px solid #17a2b8;
+    }
+    .alert-success-cpo {
+        background: #d4edda;
+        border-left: 4px solid #28a745;
+    }
+    .alert-navy-cpo {
+        background: var(--cpo-navy);
+        color: white;
+        border-left: 4px solid var(--cpo-green);
+    }
+    .checklist-item {
+        padding: 10px 0;
+        font-size: 16px;
+    }
+    .checklist-item i {
+        margin-right: 10px;
+        font-size: 18px;
+    }
+    .legislation-item {
+        padding: 12px 0;
+        border-bottom: 1px solid #eee;
+    }
+    .legislation-item:last-child {
+        border-bottom: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="tutorial-header">
+    <div class="container">
+        <h1 class="display-4 font-weight-bold" style="color: var(--cpo-navy);">
+            <i class="fas fa-book-open"></i> Tutorial Verificare Manuală
+        </h1>
+        <p class="lead" style="color: var(--cpo-navy);">
+            Ghid complet: Cum verifici dacă o construcție este legală
+        </p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-10 mx-auto">
+            <!-- Intro Card -->
+            <div class="tutorial-card">
+                <div class="card-body p-4">
+                    <p class="lead mb-0">
+                        Pentru a verifica dacă o construcție este legală și deține autorizațiile necesare, urmează acești <strong>3 pași simpli</strong>:
+                    </p>
+                </div>
+            </div>
+
+            <!-- Step 1 -->
+            <div class="tutorial-card">
+                <div class="step-section">
+                    <div class="step-icon">
+                        <i class="fas fa-clipboard-list"></i>
+                    </div>
+                    <h3 class="step-title">
+                        Verifică panoul de afișaj la șantier
+                    </h3>
+                    <p><strong>Conform legislației din România</strong>, orice construcție trebuie să aibă un <strong>panou de afișaj vizibil</strong> la locul lucrărilor care să conțină:</p>
+
+                    <ul style="font-size: 16px; line-height: 1.8;">
+                        <li>Numărul autorizației de construire</li>
+                        <li>Data emiterii autorizației</li>
+                        <li>Beneficiarul lucrărilor</li>
+                        <li>Proiectantul și executantul</li>
+                        <li>Termenul de execuție</li>
+                    </ul>
+
+                    <div class="alert-cpo alert-warning-cpo">
+                        <i class="fas fa-exclamation-triangle" style="color: #ffc107;"></i>
+                        <strong>Dacă acest panou lipsește sau informațiile nu sunt vizibile</strong>, este un semn că lucrările ar putea fi ilegale.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="tutorial-card">
+                <div class="step-section">
+                    <div class="step-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <h3 class="step-title">
+                        Caută autorizația online
+                    </h3>
+
+                    <h5 style="color: var(--cpo-navy); font-weight: 700; margin-top: 25px; margin-bottom: 15px;">
+                        <i class="fas fa-building"></i> Sector 1 București
+                    </h5>
+                    <p>Poți verifica autorizațiile emise de Primăria Sectorului 1 pe site-ul oficial:</p>
+                    <a href="https://primariasector1.ro/informatii-serviciul-urbanism/autorizatii-de-contruire-desfiintare/lista-autorizatiilor-de-construire/"
+                       target="_blank" class="btn-cpo-outline">
+                        <i class="fas fa-external-link-alt"></i> Lista Autorizațiilor - Primăria Sector 1
+                    </a>
+
+                    <h5 style="color: var(--cpo-navy); font-weight: 700; margin-top: 30px; margin-bottom: 15px;">
+                        <i class="fas fa-bolt"></i> Verificare rapidă - Cartiere Pentru Oameni
+                    </h5>
+                    <p>De asemenea, poți consulta baza noastră de date pentru o căutare mai rapidă:</p>
+                    <a href="https://cartierepentruoameni.ro/autorizatii/" target="_blank" class="btn-cpo-outline">
+                        <i class="fas fa-search"></i> Autorizații - Cartiere Pentru Oameni
+                    </a>
+
+                    <div class="alert-cpo alert-info-cpo">
+                        <i class="fas fa-info-circle" style="color: #17a2b8;"></i>
+                        <strong>Atenție</strong>: Informațiile de pe site-ul nostru pot să nu fie actualizate în timp real. Pentru informații oficiale, verifică <strong>întotdeauna</strong> site-ul primăriei.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="tutorial-card">
+                <div class="step-section">
+                    <div class="step-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3 class="step-title">
+                        Zone protejate - Primăria Municipiului București
+                    </h3>
+
+                    <p>Dacă <strong>construcția se află într-o zonă protejată</strong> (de exemplu: Parcelarea Bazilescu, zone de patrimoniu, etc.), trebuie să verifici și autorizațiile la nivel municipal.</p>
+
+                    <p>Folosește harta interactivă a Primăriei Municipiului București:</p>
+                    <a href="https://urbanism.pmb.ro/xportalurb/Map/MapRun?idMap=2&idApp=6" target="_blank" class="btn-cpo-outline">
+                        <i class="fas fa-map-marked-alt"></i> Harta Urbanism PMB
+                    </a>
+
+                    <p style="margin-top: 20px;"><strong>Aici poți vedea:</strong></p>
+                    <ul style="font-size: 16px; line-height: 1.8;">
+                        <li>Zonele protejate</li>
+                        <li>Planurile Urbanistice Zonale (PUZ)</li>
+                        <li>Autorizațiile existente în zonă</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- What to do if illegal -->
+            <div class="tutorial-card">
+                <div class="card-body p-4">
+                    <h4 style="color: var(--cpo-navy); font-weight: 700; margin-bottom: 20px;">
+                        <i class="fas fa-exclamation-circle" style="color: var(--cpo-green);"></i>
+                        Ce fac dacă am identificat o construcție ilegală?
+                    </h4>
+
+                    <p style="font-size: 16px;">Dacă ai verificat și ai descoperit că:</p>
+                    <div class="checklist-item">
+                        <i class="fas fa-times-circle text-danger"></i> Nu există panou de afișaj
+                    </div>
+                    <div class="checklist-item">
+                        <i class="fas fa-times-circle text-danger"></i> Nu găsești autorizația în bazele de date oficiale
+                    </div>
+                    <div class="checklist-item">
+                        <i class="fas fa-times-circle text-danger"></i> Construcția încalcă regulile zonelor protejate
+                    </div>
+
+                    <p style="font-size: 16px; margin-top: 25px; margin-bottom: 15px;"><strong>Raportează construcția</strong> folosind formularul nostru. Vei putea adăuga:</p>
+                    <ul style="font-size: 16px; line-height: 1.8;">
+                        <li>Locația exactă pe hartă</li>
+                        <li>Fotografii ale șantierului</li>
+                        <li>Descrierea problemei</li>
+                        <li>Tipul de încălcare</li>
+                    </ul>
+
+                    <div class="alert-cpo alert-success-cpo">
+                        <i class="fas fa-shield-alt" style="color: #28a745;"></i>
+                        <strong>Raportările tale sunt complet anonime</strong> și ne ajută să menținem o comunitate transparentă și respectuoasă a legilor urbanistice.
+                    </div>
+
+                    <div class="text-center my-4">
+                        <a href="/report/new" class="btn-cpo btn-lg">
+                            <i class="fas fa-plus-circle"></i> Raportează o construcție
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Legislation -->
+            <div class="tutorial-card">
+                <div class="card-body p-4">
+                    <h4 style="color: var(--cpo-navy); font-weight: 700; margin-bottom: 20px;">
+                        <i class="fas fa-gavel" style="color: var(--cpo-green);"></i>
+                        Legislație relevantă
+                    </h4>
+                    <div class="legislation-item">
+                        <strong>Legea 50/1991</strong> privind autorizarea executării lucrărilor de construcții
+                    </div>
+                    <div class="legislation-item">
+                        <strong>OUG 57/2019</strong> privind Codul administrativ
+                    </div>
+                    <div class="legislation-item">
+                        <strong>HG 525/1996</strong> pentru aprobarea Regulamentului General de Urbanism
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact -->
+            <div class="alert-cpo alert-navy-cpo">
+                <div class="text-center">
+                    <i class="fas fa-question-circle fa-2x mb-3" style="color: var(--cpo-green);"></i>
+                    <h5 class="font-weight-bold">Ai întrebări?</h5>
+                    <p class="mb-0">
+                        Contactează-ne prin <a href="/contact" style="color: var(--cpo-green); font-weight: 600;">formularul anonim de contact</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
