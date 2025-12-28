@@ -16,14 +16,28 @@
                 <dl class="row">
                     <dt class="col-sm-3">Tip:</dt>
                     <dd class="col-sm-9">
-                        {% if report.type == 'illegal' %}
-                        <span class="badge badge-danger">Șantier Ilegal</span>
-                        {% elif report.type == 'no-permit' %}
-                        <span class="badge badge-warning">Fără Autorizație Vizibilă</span>
-                        {% elif report.type == 'safety' %}
-                        <span class="badge badge-info">Probleme Securitate</span>
-                        {% elif report.type == 'noise' %}
-                        <span class="badge badge-secondary">Zgomot Excesiv</span>
+                        {% if session.get('role') == 'admin' %}
+                        <select id="report-type" class="form-control form-control-sm d-inline-block" style="width: auto;">
+                            <option value="no-paperwork" {% if report.type == 'no-paperwork' %}selected{% endif %}>Fără Acte</option>
+                            <option value="noise-violation" {% if report.type == 'noise-violation' %}selected{% endif %}>Zgomot</option>
+                            <option value="pollution-violation" {% if report.type == 'pollution-violation' %}selected{% endif %}>Poluare</option>
+                            <option value="others" {% if report.type == 'others' %}selected{% endif %}>Altele</option>
+                        </select>
+                        <button class="btn btn-sm btn-success ml-2" onclick="updateType()">
+                            <i class="fas fa-save"></i>
+                        </button>
+                        {% else %}
+                        {% if report.type == 'no-paperwork' %}
+                        <span class="badge badge-warning">Fără Acte</span>
+                        {% elif report.type == 'noise-violation' %}
+                        <span class="badge badge-secondary">Zgomot</span>
+                        {% elif report.type == 'pollution-violation' %}
+                        <span class="badge badge-info">Poluare</span>
+                        {% elif report.type == 'others' %}
+                        <span class="badge badge-dark">Altele</span>
+                        {% else %}
+                        <span class="badge badge-secondary">{{ report.type }}</span>
+                        {% endif %}
                         {% endif %}
                     </dd>
 
@@ -62,7 +76,16 @@
                     </dd>
 
                     <dt class="col-sm-3">Descriere:</dt>
-                    <dd class="col-sm-9">{{ report.description or 'Fără descriere' }}</dd>
+                    <dd class="col-sm-9">
+                        {% if session.get('role') == 'admin' %}
+                        <textarea id="report-description" class="form-control" rows="3">{{ report.description or '' }}</textarea>
+                        <button class="btn btn-sm btn-success mt-2" onclick="updateDescription()">
+                            <i class="fas fa-save"></i> Salvează Descriere
+                        </button>
+                        {% else %}
+                        {{ report.description or 'Fără descriere' }}
+                        {% endif %}
+                    </dd>
                 </dl>
 
                 <div id="map" style="height: 300px; margin-top: 20px;"></div>
@@ -70,10 +93,19 @@
                 <h5 class="mt-4">Fotografii ({{ pictures|length }})</h5>
                 <div class="row">
                     {% for picture in pictures %}
-                    <div class="col-md-4 mb-3">
-                        <a href="{{ picture.url }}" target="_blank">
-                            <img src="{{ picture.url }}" class="img-fluid img-thumbnail" alt="Poza {{ loop.index }}">
-                        </a>
+                    <div class="col-md-4 mb-3" id="picture-{{ loop.index }}">
+                        <div class="position-relative">
+                            <a href="{{ picture.url }}" target="_blank">
+                                <img src="{{ picture.url }}" class="img-fluid img-thumbnail" alt="Poza {{ loop.index }}">
+                            </a>
+                            {% if session.get('role') == 'admin' %}
+                            <button class="btn btn-danger btn-sm position-absolute"
+                                    style="top: 5px; right: 20px;"
+                                    onclick="deletePicture('{{ picture.path }}', 'picture-{{ loop.index }}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            {% endif %}
+                        </div>
                     </div>
                     {% else %}
                     <div class="col-12">
@@ -91,9 +123,9 @@
             <div class="card-body">
                 {% for comment in comments %}
                 <div class="mb-3">
-                    <strong>{{ comment.author_username }}</strong>
+                    <strong>Admin</strong>
                     <small class="text-muted">{{ comment.created_at }}</small>
-                    <p>{{ comment.content }}</p>
+                    <p>{{ comment.text }}</p>
                 </div>
                 {% else %}
                 <p class="text-muted">Niciun comentariu</p>
@@ -185,5 +217,55 @@ $(document).ready(function() {
         });
     });
 });
+
+// Admin functions
+function updateType() {
+    var newType = $('#report-type').val();
+    $.ajax({
+        url: '/admin/report/{{ report.id }}/update',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({type: newType}),
+        success: function() {
+            showSuccess('Tip actualizat!');
+        },
+        error: function(xhr) {
+            showError(xhr.responseJSON?.error || 'Eroare la actualizarea tipului');
+        }
+    });
+}
+
+function updateDescription() {
+    var newDesc = $('#report-description').val();
+    $.ajax({
+        url: '/admin/report/{{ report.id }}/update',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({description: newDesc}),
+        success: function() {
+            showSuccess('Descriere actualizată!');
+        },
+        error: function(xhr) {
+            showError(xhr.responseJSON?.error || 'Eroare la actualizarea descrierii');
+        }
+    });
+}
+
+function deletePicture(storagePath, elementId) {
+    showConfirm('Sigur vrei să ștergi această poză?', function() {
+        $.ajax({
+            url: '/admin/report/{{ report.id }}/picture/' + encodeURIComponent(storagePath) + '/delete',
+            type: 'POST',
+            success: function() {
+                $('#' + elementId).fadeOut(300, function() {
+                    $(this).remove();
+                });
+            },
+            error: function(xhr) {
+                showError(xhr.responseJSON?.error || 'Eroare la ștergerea pozei');
+            }
+        });
+    });
+}
 </script>
 {% endblock %}

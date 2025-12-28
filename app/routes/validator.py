@@ -79,8 +79,8 @@ def add_comment(report_id):
 
         supabase_admin.table('comments').insert({
             'report_id': report_id,
-            'author_username': session['username'],
-            'content': content
+            'user_id': session['user_id'],
+            'text': content
         }).execute()
 
         return jsonify({'success': True})

@@ -92,6 +92,51 @@ def delete_report(report_id):
         return jsonify({'error': str(e)}), 500
 
 
+@bp.route('/report/<report_id>/update', methods=['POST'])
+@login_required(role='admin')
+def update_report(report_id):
+    """Update report type and/or description"""
+    try:
+        data = request.get_json()
+        updates = {}
+
+        if 'type' in data:
+            valid_types = ['no-paperwork', 'noise-violation', 'pollution-violation', 'others']
+            if data['type'] not in valid_types:
+                return jsonify({'error': 'Tip invalid'}), 400
+            updates['type'] = data['type']
+
+        if 'description' in data:
+            updates['description'] = data['description']
+
+        if not updates:
+            return jsonify({'error': 'Nicio modificare specificată'}), 400
+
+        supabase_admin.table('reports').update(updates).eq('id', report_id).execute()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@bp.route('/report/<report_id>/picture/<path:storage_path>/delete', methods=['POST'])
+@login_required(role='admin')
+def delete_picture(report_id, storage_path):
+    """Delete a specific picture from a report"""
+    try:
+        # Delete from storage
+        try:
+            supabase_admin.storage.from_('report-pictures').remove([storage_path])
+        except:
+            pass  # Continue even if storage deletion fails
+
+        # Delete from database
+        supabase_admin.table('pictures').delete().eq('report_id', report_id).eq('storage_path', storage_path).execute()
+
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 @bp.route('/contact')
 @login_required(role='admin')
 def contact_messages():

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Hartă Rapoarte - Raportare Șantiere{% endblock %}
+{% block title %}Hartă Raportări - Raportare Șantiere{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -99,10 +99,10 @@
 <div class="map-header">
     <div class="container">
         <h1 class="display-4 font-weight-bold" style="color: var(--cpo-navy);">
-            <i class="fas fa-map-marked-alt"></i> Hartă Rapoarte
+            <i class="fas fa-map-marked-alt"></i> Hartă Raportări
         </h1>
         <p class="lead" style="color: var(--cpo-navy);">
-            Vizualizează toate rapoartele din Sectorul 1 pe hartă
+            Vizualizează toate raportările din Sectorul 1 pe hartă
         </p>
     </div>
 </div>
@@ -115,7 +115,7 @@
                 <div class="col-6 col-md-3">
                     <div class="stat-item">
                         <h3 id="total-count" class="stat-number">-</h3>
-                        <p class="stat-label">Total Rapoarte</p>
+                        <p class="stat-label">Total Raportări</p>
                     </div>
                 </div>
                 <div class="col-6 col-md-3">
@@ -276,7 +276,7 @@ $(document).ready(function() {
         $('#validated-count').text(counts.validated);
         $('#resolved-count').text(counts.resolved);
     }).fail(function() {
-        showError('Nu am putut încărca rapoartele. Te rugăm să reîncerci.');
+        showError('Nu am putut încărca raportările. Te rugăm să reîncerci.');
     });
 });
 </script>
