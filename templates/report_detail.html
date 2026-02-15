@@ -65,7 +65,7 @@
             <i class="fas fa-file-alt"></i> Detalii Raport
         </h2>
         <p class="mb-0" style="color: var(--cpo-navy);">
-            ID: <code>{{ report.id[:8] }}...</code>
+            ID: <code>{{ report.id }}</code>
         </p>
     </div>
 </div>
@@ -121,7 +121,19 @@
                         <div class="info-label">
                             <i class="fas fa-tag"></i> Tip Încălcare
                         </div>
-                        <div class="info-value">{{ report.type }}</div>
+                        <div class="info-value">
+                            {% if report.type == 'no-paperwork' %}
+                            Fără autorizație
+                            {% elif report.type == 'noise-violation' %}
+                            Zgomot
+                            {% elif report.type == 'pollution-violation' %}
+                            Poluare
+                            {% elif report.type == 'others' %}
+                            Altele
+                            {% else %}
+                            {{ report.type }}
+                            {% endif %}
+                        </div>
                     </div>
 
                     <div class="info-row">
