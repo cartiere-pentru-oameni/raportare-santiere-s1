@@ -197,8 +197,26 @@
                     {% for comment in report.comments %}
                     <div class="comment-box">
                         <p class="mb-2">{{ comment.text }}</p>
+
+                        {% if comment.pictures %}
+                        <div class="row mt-3">
+                            {% for picture in comment.pictures %}
+                            <div class="col-md-3 mb-2">
+                                <a href="{{ picture.url }}" target="_blank">
+                                    <img src="{{ picture.url }}" class="img-fluid"
+                                         style="border-radius: 10px; box-shadow: 0 3px 10px rgba(0,0,0,0.1);"
+                                         alt="Poza comentariu {{ loop.index }}">
+                                </a>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
                         <small class="text-muted">
                             <i class="fas fa-clock"></i> {{ comment.created_at }}
+                            {% if comment.updated_at %}
+                            (editat)
+                            {% endif %}
                         </small>
                     </div>
                     {% endfor %}

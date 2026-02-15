@@ -122,19 +122,98 @@
             </div>
             <div class="card-body">
                 {% for comment in comments %}
-                <div class="mb-3">
-                    <strong>Admin</strong>
-                    <small class="text-muted">{{ comment.created_at }}</small>
-                    <p>{{ comment.text }}</p>
+                <div class="mb-4 pb-3 border-bottom" id="comment-{{ comment.id }}">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <strong>Admin</strong>
+                            <small class="text-muted">{{ comment.created_at }}</small>
+                            {% if comment.updated_at %}
+                            <small class="text-muted">(editat)</small>
+                            {% endif %}
+                        </div>
+                        {% if session.get('role') == 'admin' %}
+                        <div>
+                            <button class="btn btn-sm btn-info" onclick="editComment('{{ comment.id }}', `{{ comment.text | replace('`', '\\`') | replace('\n', '\\n') }}`)">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteComment('{{ comment.id }}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Comment text (display mode) -->
+                    <div class="comment-text-display" id="comment-text-{{ comment.id }}">
+                        <p>{{ comment.text }}</p>
+                    </div>
+
+                    <!-- Comment text (edit mode - hidden by default) -->
+                    <div class="comment-text-edit" id="comment-edit-{{ comment.id }}" style="display: none;">
+                        <textarea class="form-control mb-2" rows="3" id="comment-textarea-{{ comment.id }}">{{ comment.text }}</textarea>
+                        <button class="btn btn-sm btn-success" onclick="saveCommentEdit('{{ comment.id }}')">
+                            <i class="fas fa-save"></i> Salvează
+                        </button>
+                        <button class="btn btn-sm btn-secondary" onclick="cancelCommentEdit('{{ comment.id }}')">
+                            <i class="fas fa-times"></i> Anulează
+                        </button>
+                    </div>
+
+                    <!-- Comment pictures -->
+                    {% if comment.pictures %}
+                    <div class="row mt-3">
+                        {% for picture in comment.pictures %}
+                        <div class="col-md-3 mb-2" id="comment-picture-{{ comment.id }}-{{ loop.index }}">
+                            <div class="position-relative">
+                                <a href="{{ picture.url }}" target="_blank">
+                                    <img src="{{ picture.url }}" class="img-fluid img-thumbnail" alt="Poza comentariu {{ loop.index }}">
+                                </a>
+                                {% if session.get('role') == 'admin' %}
+                                <button class="btn btn-danger btn-sm position-absolute"
+                                        style="top: 5px; right: 20px;"
+                                        onclick="deleteCommentPicture('{{ comment.id }}', '{{ picture.path }}', 'comment-picture-{{ comment.id }}-{{ loop.index }}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Add pictures to comment (admin only) -->
+                    {% if session.get('role') == 'admin' %}
+                    <div class="mt-2">
+                        <button class="btn btn-sm btn-outline-secondary" onclick="showAddPicturesForm('{{ comment.id }}')">
+                            <i class="fas fa-camera"></i> Adaugă poze
+                        </button>
+                        <div id="add-pictures-form-{{ comment.id }}" style="display: none;" class="mt-2">
+                            <form id="add-pictures-form-element-{{ comment.id }}" enctype="multipart/form-data">
+                                <input type="file" name="pictures" accept="image/jpeg,image/png,image/webp" multiple class="form-control-file mb-2">
+                                <button type="submit" class="btn btn-sm btn-success">
+                                    <i class="fas fa-upload"></i> Încarcă
+                                </button>
+                                <button type="button" class="btn btn-sm btn-secondary" onclick="hideAddPicturesForm('{{ comment.id }}')">
+                                    Anulează
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
                 {% else %}
                 <p class="text-muted">Niciun comentariu</p>
                 {% endfor %}
 
-                <form id="comment-form" class="mt-3">
+                <form id="comment-form" class="mt-3" enctype="multipart/form-data">
                     <div class="form-group">
                         <label>Adaugă comentariu:</label>
                         <textarea class="form-control" name="content" rows="3" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Atașează fotografii (opțional):</label>
+                        <input type="file" name="pictures" accept="image/jpeg,image/png,image/webp" multiple class="form-control-file">
+                        <small class="form-text text-muted">Maximum 10 poze, max 10MB fiecare. Format: JPEG, PNG, WebP</small>
                     </div>
                     <button type="submit" class="btn btn-primary">Adaugă Comentariu</button>
                 </form>
@@ -197,15 +276,17 @@ $(document).ready(function() {
         });
     });
 
-    // Comment submit
+    // Comment submit with pictures
     $('#comment-form').on('submit', function(e) {
         e.preventDefault();
-        var formData = $(this).serialize();
+        var formData = new FormData(this);
 
         $.ajax({
             url: '/validator/report/{{ report.id }}/comment',
             type: 'POST',
             data: formData,
+            processData: false,
+            contentType: false,
             success: function() {
                 showSuccess('Comentariu adăugat!', function() {
                     location.reload();
@@ -267,5 +348,107 @@ function deletePicture(storagePath, elementId) {
         });
     });
 }
+
+// Comment management functions
+function editComment(commentId, currentText) {
+    $('#comment-text-' + commentId).hide();
+    $('#comment-edit-' + commentId).show();
+    $('#comment-textarea-' + commentId).val(currentText);
+}
+
+function cancelCommentEdit(commentId) {
+    $('#comment-text-' + commentId).show();
+    $('#comment-edit-' + commentId).hide();
+}
+
+function saveCommentEdit(commentId) {
+    var newText = $('#comment-textarea-' + commentId).val();
+
+    if (!newText.trim()) {
+        showError('Textul comentariului nu poate fi gol');
+        return;
+    }
+
+    $.ajax({
+        url: '/admin/comment/' + commentId + '/update',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({text: newText}),
+        success: function() {
+            showSuccess('Comentariu actualizat!', function() {
+                location.reload();
+            });
+        },
+        error: function(xhr) {
+            showError(xhr.responseJSON?.error || 'Eroare la actualizarea comentariului');
+        }
+    });
+}
+
+function deleteComment(commentId) {
+    showConfirm('Sigur vrei să ștergi acest comentariu? Pozele atașate vor fi de asemenea șterse.', function() {
+        $.ajax({
+            url: '/admin/comment/' + commentId + '/delete',
+            type: 'POST',
+            success: function() {
+                $('#comment-' + commentId).fadeOut(300, function() {
+                    $(this).remove();
+                });
+            },
+            error: function(xhr) {
+                showError(xhr.responseJSON?.error || 'Eroare la ștergerea comentariului');
+            }
+        });
+    });
+}
+
+function deleteCommentPicture(commentId, storagePath, elementId) {
+    showConfirm('Sigur vrei să ștergi această poză?', function() {
+        $.ajax({
+            url: '/admin/comment/' + commentId + '/picture/' + encodeURIComponent(storagePath) + '/delete',
+            type: 'POST',
+            success: function() {
+                $('#' + elementId).fadeOut(300, function() {
+                    $(this).remove();
+                });
+            },
+            error: function(xhr) {
+                showError(xhr.responseJSON?.error || 'Eroare la ștergerea pozei');
+            }
+        });
+    });
+}
+
+function showAddPicturesForm(commentId) {
+    $('#add-pictures-form-' + commentId).show();
+}
+
+function hideAddPicturesForm(commentId) {
+    $('#add-pictures-form-' + commentId).hide();
+    $('#add-pictures-form-element-' + commentId)[0].reset();
+}
+
+// Add pictures to comment
+$(document).on('submit', '[id^="add-pictures-form-element-"]', function(e) {
+    e.preventDefault();
+    var commentId = $(this).attr('id').split('-').pop();
+    var formData = new FormData(this);
+
+    $.ajax({
+        url: '/admin/comment/' + commentId + '/pictures',
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function() {
+            showSuccess('Poze adăugate!', function() {
+                location.reload();
+            });
+        },
+        error: function(xhr) {
+            showError(xhr.responseJSON?.error || 'Eroare la încărcarea pozelor');
+        }
+    });
+});
 </script>
 {% endblock %}

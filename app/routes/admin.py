@@ -1,8 +1,9 @@
 from flask import Blueprint, render_template, jsonify, request
 import bcrypt
+import uuid
 from app.db import supabase_admin
 from app.storage import storage
-from app.helpers import login_required
+from app.helpers import login_required, strip_exif
 
 bp = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -178,6 +179,134 @@ def delete_message(message_id):
     """Delete contact message"""
     try:
         supabase_admin.table('contact_messages').delete().eq('id', message_id).execute()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# Comment Management Endpoints
+
+@bp.route('/comment/<comment_id>/update', methods=['PUT', 'POST'])
+@login_required(role='admin')
+def update_comment(comment_id):
+    """Update comment text"""
+    try:
+        data = request.get_json() if request.is_json else request.form
+        text = data.get('text')
+
+        if not text or not text.strip():
+            return jsonify({'error': 'Text required'}), 400
+
+        supabase_admin.table('comments').update({
+            'text': text.strip(),
+            'updated_at': 'NOW()'
+        }).eq('id', comment_id).execute()
+
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@bp.route('/comment/<comment_id>/delete', methods=['POST'])
+@login_required(role='admin')
+def delete_comment(comment_id):
+    """Delete comment and all associated pictures"""
+    try:
+        # Fetch comment pictures to delete from storage
+        pictures_response = supabase_admin.table('comment_pictures').select('*').eq('comment_id', comment_id).execute()
+
+        # Delete pictures from S3
+        for pic in (pictures_response.data or []):
+            try:
+                storage.delete(pic['storage_path'])
+            except:
+                pass  # Continue even if storage deletion fails
+
+        # Delete comment (cascade will delete comment_pictures from DB)
+        supabase_admin.table('comments').delete().eq('id', comment_id).execute()
+
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@bp.route('/comment/<comment_id>/pictures', methods=['POST'])
+@login_required(role='admin')
+def add_comment_pictures(comment_id):
+    """Add pictures to existing comment"""
+    try:
+        # Verify comment exists and get report_id
+        comment_response = supabase_admin.table('comments').select('report_id').eq('id', comment_id).execute()
+        if not comment_response.data:
+            return jsonify({'error': 'Comment not found'}), 404
+
+        report_id = comment_response.data[0]['report_id']
+        files = request.files.getlist('pictures')
+
+        # Validate file count
+        if len(files) > 10:
+            return jsonify({'error': 'Maximum 10 pictures allowed'}), 400
+
+        # Validate files
+        ALLOWED_TYPES = {'image/jpeg', 'image/png', 'image/webp'}
+        MAX_SIZE = 10 * 1024 * 1024  # 10MB
+
+        for file in files:
+            if file and file.filename:
+                if file.content_type not in ALLOWED_TYPES:
+                    return jsonify({'error': f'Invalid file type: {file.filename}'}), 400
+
+                file.seek(0, 2)
+                size = file.tell()
+                file.seek(0)
+
+                if size > MAX_SIZE:
+                    return jsonify({'error': f'File too large: {file.filename}'}), 400
+
+        # Upload pictures
+        uploaded_count = 0
+        for file in files:
+            if file and file.filename:
+                # Read and strip EXIF
+                image_data = file.read()
+                clean_image_data = strip_exif(image_data)
+
+                # Generate unique filename with path: {report_id}/comments/{comment_id}/{uuid}.{ext}
+                ext = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else 'jpg'
+                filename = f"{report_id}/comments/{comment_id}/{uuid.uuid4()}.{ext}"
+
+                # Upload to S3
+                storage.upload(filename, clean_image_data, file.content_type)
+
+                # Save picture record
+                supabase_admin.table('comment_pictures').insert({
+                    'comment_id': comment_id,
+                    'storage_path': filename
+                }).execute()
+
+                uploaded_count += 1
+
+        return jsonify({'success': True, 'uploaded': uploaded_count})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@bp.route('/comment/<comment_id>/picture/<path:storage_path>/delete', methods=['POST'])
+@login_required(role='admin')
+def delete_comment_picture(comment_id, storage_path):
+    """Delete a specific picture from a comment"""
+    try:
+        # Delete from storage
+        try:
+            storage.delete(storage_path)
+        except:
+            pass  # Continue even if storage deletion fails
+
+        # Delete from database
+        supabase_admin.table('comment_pictures').delete()\
+            .eq('comment_id', comment_id)\
+            .eq('storage_path', storage_path).execute()
+
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'error': str(e)}), 500

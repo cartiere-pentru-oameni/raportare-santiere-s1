@@ -119,9 +119,22 @@ def report_detail(report_id):
     report_data = response.data[0]
     report = format_report(report_data)
 
-    # Fetch comments
-    comments_response = supabase.table('comments').select('*').eq('report_id', report_id).execute()
-    report['comments'] = comments_response.data or []
+    # Fetch comments with pictures (only for non-pending reports)
+    report['comments'] = []
+    if report_data['status'] != 'pending':
+        comments_response = supabase.table('comments').select('*').eq('report_id', report_id).execute()
+
+        for comment in (comments_response.data or []):
+            # Fetch pictures for this comment
+            pictures_response = supabase_admin.table('comment_pictures').select('*').eq('comment_id', comment['id']).execute()
+
+            comment_pictures = []
+            for pic in (pictures_response.data or []):
+                url = storage.create_signed_url(pic['storage_path'], 3600)
+                comment_pictures.append({'url': url})
+
+            comment['pictures'] = comment_pictures
+            report['comments'].append(comment)
 
     # Fetch pictures with signed URLs (only for non-pending reports)
     report['pictures'] = []
