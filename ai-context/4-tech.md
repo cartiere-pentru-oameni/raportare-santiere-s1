@@ -4,12 +4,15 @@
 Custom database authentication using bcrypt password hashing and Flask server-side sessions. Only internal users (admins, validators) need accounts - citizens remain fully anonymous.
 
 ## Database
-Supabase Postgres database with Row-Level Security (RLS). Two clients are used:
-- `supabase` (anon key) - for public operations, respects RLS
-- `supabase_admin` (service key) - for admin operations, bypasses RLS
+Self-hosted PostgreSQL database with psycopg3 connection pooling. Two client aliases are used for backward compatibility:
+- `supabase` - alias to DatabaseClient for public operations
+- `supabase_admin` - alias to DatabaseClient for admin operations
+Both now connect to the same PostgreSQL database (RLS removed for self-hosted setup).
 
 ## File Storage
-Supabase Storage (S3-compatible) for report pictures. Bucket: `report-pictures` (private).
+Hetzner Object Storage (S3-compatible) using boto3 SDK. Private bucket with presigned URLs for access control.
+- Storage operations: upload, download, delete, signed URL generation
+- Security: Private bucket, 1-hour presigned URLs, server-side access control
 
 ## Backend
 Python Flask 3.1 with Blueprints architecture:

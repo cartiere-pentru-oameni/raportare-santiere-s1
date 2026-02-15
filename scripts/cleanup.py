@@ -4,18 +4,22 @@ Cleanup script to delete all reports and associated data from database and stora
 USE WITH CAUTION - THIS WILL DELETE ALL DATA!
 """
 
+import sys
 import os
-from supabase import create_client
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from dotenv import load_dotenv
+import psycopg
+from psycopg.rows import dict_row
 
 # Load environment variables
 load_dotenv()
 
-# Initialize Supabase client with service role (full access)
-supabase = create_client(
-    os.getenv('SUPABASE_URL'),
-    os.getenv('SUPABASE_SERVICE_KEY')
-)
+# Import storage client
+from app.storage import storage
+
+# Connect to PostgreSQL
+pg_conn = psycopg.connect(os.getenv('DATABASE_URL'))
 
 def cleanup():
     print("⚠️  WARNING: This will delete ALL reports, pictures, and comments!")
@@ -23,60 +27,84 @@ def cleanup():
 
     if confirm != "DELETE ALL":
         print("Cancelled.")
+        pg_conn.close()
         return
 
     print("\n🗑️  Deleting all data...")
 
-    # Delete all pictures from storage
-    print("- Deleting storage files...")
-    try:
-        # List all files in bucket
-        files = supabase.storage.from_('report-pictures').list()
+    # Get all picture storage paths before deleting
+    print("- Fetching picture storage paths...")
+    with pg_conn.cursor(row_factory=dict_row) as cur:
+        cur.execute("SELECT storage_path FROM pictures")
+        pictures = cur.fetchall()
 
-        # Delete all folders/files
-        for item in files:
-            if item.get('name'):
-                try:
-                    supabase.storage.from_('report-pictures').remove([item['name']])
-                    print(f"  Deleted: {item['name']}")
-                except Exception as e:
-                    print(f"  Error deleting {item['name']}: {e}")
-    except Exception as e:
-        print(f"  Storage cleanup error: {e}")
+    # Delete all pictures from S3 storage
+    print(f"- Deleting {len(pictures)} files from S3 storage...")
+    deleted_count = 0
+    for pic in pictures:
+        try:
+            storage.delete(pic['storage_path'])
+            deleted_count += 1
+            print(f"  Deleted: {pic['storage_path']}")
+        except Exception as e:
+            print(f"  Error deleting {pic['storage_path']}: {e}")
+    print(f"  ✓ Deleted {deleted_count}/{len(pictures)} files from storage")
 
     # Delete all comments
     print("- Deleting comments...")
     try:
-        supabase.table('comments').delete().neq('id', '00000000-0000-0000-0000-000000000000').execute()
-        print("  ✓ Comments deleted")
+        with pg_conn.cursor() as cur:
+            cur.execute("DELETE FROM comments")
+            count = cur.rowcount
+            pg_conn.commit()
+        print(f"  ✓ Deleted {count} comments")
     except Exception as e:
         print(f"  Error: {e}")
+        pg_conn.rollback()
 
     # Delete all pictures records
     print("- Deleting picture records...")
     try:
-        supabase.table('pictures').delete().neq('id', '00000000-0000-0000-0000-000000000000').execute()
-        print("  ✓ Picture records deleted")
+        with pg_conn.cursor() as cur:
+            cur.execute("DELETE FROM pictures")
+            count = cur.rowcount
+            pg_conn.commit()
+        print(f"  ✓ Deleted {count} picture records")
     except Exception as e:
         print(f"  Error: {e}")
+        pg_conn.rollback()
 
     # Delete all reports
     print("- Deleting reports...")
     try:
-        supabase.table('reports').delete().neq('id', '00000000-0000-0000-0000-000000000000').execute()
-        print("  ✓ Reports deleted")
+        with pg_conn.cursor() as cur:
+            cur.execute("DELETE FROM reports")
+            count = cur.rowcount
+            pg_conn.commit()
+        print(f"  ✓ Deleted {count} reports")
     except Exception as e:
         print(f"  Error: {e}")
+        pg_conn.rollback()
 
     # Delete all reports_history
     print("- Deleting reports history...")
     try:
-        supabase.table('reports_history').delete().neq('id', '00000000-0000-0000-0000-000000000000').execute()
-        print("  ✓ Reports history deleted")
+        with pg_conn.cursor() as cur:
+            cur.execute("DELETE FROM reports_history")
+            count = cur.rowcount
+            pg_conn.commit()
+        print(f"  ✓ Deleted {count} history records")
     except Exception as e:
         print(f"  Error: {e}")
+        pg_conn.rollback()
 
+    pg_conn.close()
     print("\n✅ Cleanup complete!")
 
 if __name__ == '__main__':
-    cleanup()
+    try:
+        cleanup()
+    except KeyboardInterrupt:
+        print("\n\n❌ Cancelled by user")
+        pg_conn.close()
+        sys.exit(1)

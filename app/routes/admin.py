@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, jsonify, request
 import bcrypt
 from app.db import supabase_admin
+from app.storage import storage
 from app.helpers import login_required
 
 bp = Blueprint('admin', __name__, url_prefix='/admin')
@@ -80,7 +81,7 @@ def delete_report(report_id):
         # Delete pictures from storage
         for pic in (pictures_response.data or []):
             try:
-                supabase_admin.storage.from_('report-pictures').remove([pic['storage_path']])
+                storage.delete(pic['storage_path'])
             except:
                 pass  # Continue even if storage deletion fails
 
@@ -125,7 +126,7 @@ def delete_picture(report_id, storage_path):
     try:
         # Delete from storage
         try:
-            supabase_admin.storage.from_('report-pictures').remove([storage_path])
+            storage.delete(storage_path)
         except:
             pass  # Continue even if storage deletion fails
 

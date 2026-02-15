@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, jsonify, request, session
 import uuid
 from app.db import supabase, supabase_admin
+from app.storage import storage
 from app.helpers import strip_exif, format_report
 
 bp = Blueprint('public', __name__)
@@ -86,12 +87,8 @@ def create_report():
                 ext = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else 'jpg'
                 filename = f"{report_id}/{uuid.uuid4()}.{ext}"
 
-                # Upload to Supabase Storage
-                supabase.storage.from_('report-pictures').upload(
-                    filename,
-                    clean_image_data,
-                    {'content-type': file.content_type}
-                )
+                # Upload to S3 Storage
+                storage.upload(filename, clean_image_data, file.content_type)
 
                 # Save picture record (use admin client to bypass RLS)
                 supabase_admin.table('pictures').insert({
@@ -131,8 +128,8 @@ def report_detail(report_id):
     if report_data['status'] in ['in-review', 'validated', 'resolved']:
         pictures_response = supabase_admin.table('pictures').select('*').eq('report_id', report_id).execute()
         for pic in (pictures_response.data or []):
-            url = supabase_admin.storage.from_('report-pictures').create_signed_url(pic['storage_path'], 3600)
-            report['pictures'].append({'url': url['signedURL'], 'path': pic['storage_path']})
+            url = storage.create_signed_url(pic['storage_path'], 3600)
+            report['pictures'].append({'url': url, 'path': pic['storage_path']})
 
     return render_template('report_detail.html', report=report)
 

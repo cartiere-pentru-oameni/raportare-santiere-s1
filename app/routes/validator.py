@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, jsonify, request, session
 from app.db import supabase_admin
+from app.storage import storage
 from app.helpers import login_required
 
 bp = Blueprint('validator', __name__, url_prefix='/validator')
@@ -39,9 +40,9 @@ def report_detail(report_id):
     pictures_response = supabase_admin.table('pictures').select('*').eq('report_id', report_id).execute()
     pictures = []
     for pic in (pictures_response.data or []):
-        # Generate signed URL (valid for 1 hour) using admin client
-        url = supabase_admin.storage.from_('report-pictures').create_signed_url(pic['storage_path'], 3600)
-        pictures.append({'url': url['signedURL'], 'path': pic['storage_path']})
+        # Generate signed URL (valid for 1 hour)
+        url = storage.create_signed_url(pic['storage_path'], 3600)
+        pictures.append({'url': url, 'path': pic['storage_path']})
 
     # Fetch comments
     comments_response = supabase_admin.table('comments').select('*').eq('report_id', report_id).order('created_at', desc=False).execute()

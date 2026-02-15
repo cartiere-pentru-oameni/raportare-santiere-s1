@@ -16,8 +16,8 @@ Dezvoltat de [Cartiere Pentru Oameni](https://cartierepentruoameni.ro) - ONG axa
 ## Tech Stack
 
 - **Backend**: Flask 3.1 + Python
-- **Database**: Supabase (PostgreSQL)
-- **Storage**: Supabase Storage (pentru fotografii)
+- **Database**: PostgreSQL (self-hosted)
+- **Storage**: Hetzner Object Storage (S3-compatible)
 - **Frontend**: AdminLTE 3.2, Leaflet.js, Bootstrap
 
 ## Instalare
@@ -54,15 +54,18 @@ cp .env.example .env
 
 Variabile necesare:
 - `SECRET_KEY` - Cheie secretă Flask
-- `SUPABASE_URL` - URL-ul proiectului Supabase
-- `SUPABASE_ANON_KEY` - Cheie publică Supabase
-- `SUPABASE_SERVICE_KEY` - Cheie service role Supabase
+- `DATABASE_URL` - Connection string PostgreSQL
+- `S3_ENDPOINT` - URL endpoint Hetzner Object Storage
+- `S3_BUCKET` - Nume bucket S3
+- `S3_ACCESS_KEY` - Access key S3
+- `S3_SECRET_KEY` - Secret key S3
+- `S3_REGION` - Regiunea S3 (ex: fsn1)
 
-### 5. Configurează Supabase
+### 5. Configurează baza de date
 
-1. Creează un proiect nou pe [supabase.com](https://supabase.com)
-2. Rulează scripturile SQL din `schema.sql` și `migrations/`
-3. Creează bucket-ul `report-pictures` (privat)
+1. Creează o bază PostgreSQL (local sau hosted)
+2. Rulează schema din `schema_postgres.sql`
+3. Configurează Hetzner Object Storage (vezi `STORAGE_SETUP.md`)
 
 ### 6. Creează primul admin
 
@@ -85,7 +88,8 @@ raportare-santiere/
 ├── app/
 │   ├── __init__.py          # App factory
 │   ├── config.py            # Configurare din .env
-│   ├── db.py                # Clienți Supabase
+│   ├── db.py                # PostgreSQL connection pool
+│   ├── storage.py           # S3 storage client
 │   ├── helpers.py           # Funcții utilitare
 │   ├── routes/
 │   │   ├── public.py        # Rute publice
@@ -118,7 +122,8 @@ raportare-santiere/
 - Nu se colectează IP-uri sau user agents
 - Datele EXIF sunt șterse automat din fotografii
 - Raportările pending nu afișează descrierea/pozele public
-- Row-Level Security (RLS) pe toate tabelele
+- Private S3 bucket cu presigned URLs
+- Access control la nivel de aplicație
 
 ## Licență
 

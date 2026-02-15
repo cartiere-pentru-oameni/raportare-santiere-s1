@@ -1,48 +1,58 @@
-# Supabase Storage Setup
+# Hetzner Object Storage Setup
 
 ## Create Bucket
 
-1. Go to Supabase Dashboard → Storage
-2. Create new bucket: `report-pictures`
-3. **Important:** Set bucket to **PRIVATE** (not public)
+1. Log in to Hetzner Cloud Console
+2. Navigate to Object Storage
+3. Create new bucket with **PRIVATE** visibility
+4. Note down the following credentials:
+   - Endpoint URL (e.g., `https://fsn1.your-objectstorage.com`)
+   - Bucket name
+   - Access key
+   - Secret key
+   - Region (e.g., `fsn1`)
 
-## Add RLS Policies to Bucket
+## Configure Application
 
-Run this SQL in Supabase SQL Editor:
+Add the following to your `.env` file:
 
-```sql
--- Allow authenticated service role (validators/admins) to upload
-CREATE POLICY "Service role can upload" ON storage.objects
-FOR INSERT TO service_role
-WITH CHECK (bucket_id = 'report-pictures');
-
--- Allow authenticated service role to delete
-CREATE POLICY "Service role can delete" ON storage.objects
-FOR DELETE TO service_role
-USING (bucket_id = 'report-pictures');
-
--- Allow anon users to upload (citizens submitting reports)
-CREATE POLICY "Anon can upload" ON storage.objects
-FOR INSERT TO anon
-WITH CHECK (bucket_id = 'report-pictures');
-
--- Public can view pictures only for reports with status in-review, validated, or resolved
-CREATE POLICY "Public can view approved pictures" ON storage.objects
-FOR SELECT
-USING (
-  bucket_id = 'report-pictures'
-  AND EXISTS (
-    SELECT 1 FROM pictures
-    JOIN reports ON reports.id = pictures.report_id
-    WHERE pictures.storage_path = storage.objects.name
-    AND reports.status IN ('in-review', 'validated', 'resolved')
-  )
-);
+```env
+# Hetzner Object Storage (S3-compatible)
+S3_ENDPOINT=https://fsn1.your-objectstorage.com
+S3_BUCKET=your-bucket-name
+S3_ACCESS_KEY=your-access-key
+S3_SECRET_KEY=your-secret-key
+S3_REGION=fsn1
 ```
+
+## Security Features
+
+- **Private bucket:** All files require presigned URLs for access
+- **Presigned URLs:** Generated server-side, valid for 1 hour
+- **Access control:** Only reports with status `in-review`, `validated`, or `resolved` have accessible images
+- **EXIF stripping:** Automatic on server side for privacy
+- **No public access:** Direct file URLs will not work
 
 ## File Restrictions
 
 - **Max files per report:** 10
 - **Max file size:** 10MB
 - **Allowed types:** image/jpeg, image/png, image/webp
-- **EXIF stripping:** Automatic on server side
+
+## Storage Operations
+
+The application uses boto3 (AWS S3 SDK) for all storage operations:
+- Upload images with EXIF stripped
+- Generate presigned URLs for temporary access
+- Delete images when reports are removed
+- Check file existence
+
+## Migration from Supabase
+
+If migrating from Supabase Storage, use the migration script:
+
+```bash
+python scripts/migrate_storage.py --yes
+```
+
+This will copy all existing images from Supabase to Hetzner Object Storage.

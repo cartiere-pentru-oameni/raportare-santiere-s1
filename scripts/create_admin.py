@@ -6,13 +6,11 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import bcrypt
-from supabase import create_client
+import psycopg
 from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
-
-supabase = create_client(os.getenv('SUPABASE_URL'), os.getenv('SUPABASE_SERVICE_KEY'))
 
 username = input("Admin username [admin]: ").strip() or "admin"
 password = input("Admin password [admin123]: ").strip() or "admin123"
@@ -20,11 +18,13 @@ password = input("Admin password [admin123]: ").strip() or "admin123"
 password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
 try:
-    supabase.table('official_users').insert({
-        'username': username,
-        'password_hash': password_hash,
-        'role': 'admin'
-    }).execute()
+    with psycopg.connect(os.getenv('DATABASE_URL')) as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "INSERT INTO official_users (username, password_hash, role) VALUES (%s, %s, %s)",
+                (username, password_hash, 'admin')
+            )
+            conn.commit()
 
     print(f'\n✅ Admin created successfully!')
     print(f'   Username: {username}')
